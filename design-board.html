@@ -1,0 +1,877 @@
+<title>Hangout — v1 design board</title>
+
+<style>
+  /* ---------- tokens ---------- */
+  :root {
+    --ink:        #0F1512;
+    --ink-2:      #3D4A43;
+    --ink-3:      #6B7A72;
+    --paper:      #E8EAE4;
+    --paper-2:    #DDE1DA;
+    --card:       #FCFDFB;
+    --card-2:     #F1F3EE;
+    --line:       #C9CEC5;
+    --line-soft:  #DEE2DA;
+    --accent:     #E8452F;   /* cricket-ball vermilion — "someone is missing" */
+    --accent-ink: #FFFFFF;
+    --accent-wash:#FCE9E5;
+    --court:      #0B6E4F;   /* court green — "sorted" */
+    --court-wash: #DDEDE5;
+    --shadow:     0 1px 2px rgba(15,21,18,.06), 0 12px 32px -12px rgba(15,21,18,.22);
+    --bezel:      #12180F;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink:        #E9ECE5;
+      --ink-2:      #A9B4AC;
+      --ink-3:      #7C8981;
+      --paper:      #0C110E;
+      --paper-2:    #141B16;
+      --card:       #171F1A;
+      --card-2:     #1E2721;
+      --line:       #2C382F;
+      --line-soft:  #232D26;
+      --accent:     #FF6248;
+      --accent-ink: #1A0B07;
+      --accent-wash:#3A1A13;
+      --court:      #35BE8B;
+      --court-wash: #12332616;
+      --shadow:     0 1px 2px rgba(0,0,0,.4), 0 16px 40px -14px rgba(0,0,0,.7);
+      --bezel:      #050806;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink:#E9ECE5; --ink-2:#A9B4AC; --ink-3:#7C8981;
+    --paper:#0C110E; --paper-2:#141B16; --card:#171F1A; --card-2:#1E2721;
+    --line:#2C382F; --line-soft:#232D26;
+    --accent:#FF6248; --accent-ink:#1A0B07; --accent-wash:#3A1A13;
+    --court:#35BE8B; --court-wash:#12332616;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 16px 40px -14px rgba(0,0,0,.7);
+    --bezel:#050806;
+  }
+  :root[data-theme="light"] {
+    --ink:#0F1512; --ink-2:#3D4A43; --ink-3:#6B7A72;
+    --paper:#E8EAE4; --paper-2:#DDE1DA; --card:#FCFDFB; --card-2:#F1F3EE;
+    --line:#C9CEC5; --line-soft:#DEE2DA;
+    --accent:#E8452F; --accent-ink:#FFFFFF; --accent-wash:#FCE9E5;
+    --court:#0B6E4F; --court-wash:#DDEDE5;
+    --shadow:0 1px 2px rgba(15,21,18,.06), 0 12px 32px -12px rgba(15,21,18,.22);
+    --bezel:#12180F;
+  }
+
+  /* ---------- board ---------- */
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* masthead */
+  .mast { padding: 72px 0 40px; border-bottom: 1px solid var(--line); }
+  .eyebrow {
+    font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; margin: 0 0 20px;
+  }
+  .mast h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: clamp(38px, 6vw, 64px);
+    line-height: 1.03; letter-spacing: -.015em; font-weight: 600;
+    margin: 0 0 22px; text-wrap: balance; max-width: 15ch;
+  }
+  .mast h1 em { font-style: normal; color: var(--accent); }
+  .mast .lede {
+    font-size: 18px; color: var(--ink-2); max-width: 60ch; margin: 0 0 28px;
+  }
+  .scope {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .scope span {
+    font-size: 12px; font-weight: 600; letter-spacing: .02em;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--ink-2); background: var(--card);
+  }
+  .scope span.on { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+
+  /* acts */
+  .act { padding-top: 64px; }
+  .act-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+  .act-head h2 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 28px; font-weight: 600; margin: 0; letter-spacing: -.01em;
+  }
+  .act-head .rule { flex: 1; height: 1px; background: var(--line); min-width: 40px; }
+  .act > p.note { color: var(--ink-2); max-width: 62ch; margin: 0 0 36px; font-size: 15px; }
+
+  .grid {
+    display: grid; gap: 44px 36px;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 16px; }
+  figcaption { max-width: 34ch; }
+  figcaption b {
+    display: block; font-size: 15px; font-weight: 650; letter-spacing: -.005em; margin-bottom: 4px;
+  }
+  figcaption span { font-size: 14px; color: var(--ink-2); }
+  figcaption .why {
+    display: block; margin-top: 8px; font-size: 13px; color: var(--accent); font-weight: 550;
+  }
+
+  /* ---------- phone ---------- */
+  .phone {
+    width: 100%; max-width: 320px; aspect-ratio: 320 / 660;
+    background: var(--bezel);
+    border-radius: 42px; padding: 9px;
+    box-shadow: var(--shadow);
+    justify-self: start;
+  }
+  .screen {
+    width: 100%; height: 100%;
+    background: var(--card);
+    border-radius: 34px; overflow: hidden;
+    display: flex; flex-direction: column;
+    font-size: 13px; color: var(--ink);
+    position: relative;
+  }
+
+  .status {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 20px 4px; font-size: 11px; font-weight: 650;
+    font-variant-numeric: tabular-nums; color: var(--ink);
+  }
+  .status .dots { display: flex; gap: 3px; align-items: center; }
+  .status .dots i { width: 3px; height: 3px; border-radius: 50%; background: var(--ink); display: block; }
+  .status .batt { width: 18px; height: 9px; border: 1.2px solid var(--ink); border-radius: 2.5px; position: relative; }
+  .status .batt::after { content:""; position:absolute; inset: 1.5px; right: 6px; background: var(--ink); border-radius: 1px; }
+
+  .nav {
+    padding: 8px 20px 12px;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+  }
+  .nav h3 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -.02em; }
+  .nav .sub { font-size: 11px; color: var(--ink-3); font-weight: 550; letter-spacing: .01em; }
+  .nav .back { font-size: 20px; color: var(--ink-2); line-height: 1; }
+  .nav .av {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--court); color: #fff;
+    display: grid; place-items: center; font-size: 11px; font-weight: 700; flex: none;
+  }
+
+  .body { flex: 1; overflow: hidden; padding: 4px 16px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .body.pad { padding-top: 8px; }
+
+  .label {
+    font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-3); margin: 4px 0 -2px;
+  }
+
+  /* game card */
+  .gc {
+    border: 1px solid var(--line-soft); border-radius: 16px;
+    background: var(--card); padding: 12px 13px;
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .gc.urgent { border-color: var(--accent); background: var(--accent-wash); }
+  .gc.done   { border-color: var(--line-soft); background: var(--card-2); }
+  .gc.filled { border-color: var(--court); background: var(--court-wash); }
+
+  .gc-top { display: flex; align-items: center; gap: 7px; }
+  .gc-kind {
+    font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  }
+  .gc.urgent .gc-kind { color: var(--accent); }
+  .gc.filled .gc-kind { color: var(--court); }
+  .gc.done   .gc-kind { color: var(--ink-3); }
+  .gc-when { margin-left: auto; font-size: 11px; color: var(--ink-3); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .gc h4 { margin: 0; font-size: 16px; font-weight: 680; letter-spacing: -.015em; line-height: 1.25; }
+  .gc .meta { font-size: 12px; color: var(--ink-2); display: flex; gap: 6px; align-items: center; }
+  .gc .meta i { width: 2.5px; height: 2.5px; border-radius: 50%; background: var(--ink-3); display: block; flex: none; }
+
+  .gc-foot { display: flex; align-items: center; gap: 10px; margin-top: 1px; }
+
+  .slots { display: flex; align-items: center; }
+  .slots > * + * { margin-left: -6px; }
+  .pip {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid var(--card);
+    display: grid; place-items: center;
+    font-size: 10px; font-weight: 700; color: #fff;
+    background: var(--ink-2); flex: none;
+  }
+  .gc.urgent .pip, .gc.filled .pip { border-color: var(--accent-wash); }
+  .gc.filled .pip { border-color: var(--court-wash); }
+  .pip.p1 { background: #2F6F8F; } .pip.p2 { background: #7A4E9B; } .pip.p3 { background: #B0653C; }
+  .pip.p4 { background: #3C7A5A; } .pip.p5 { background: #8F4358; }
+  .pip.empty {
+    background: transparent; border: 2px dashed var(--accent);
+    color: var(--accent); font-size: 13px; font-weight: 500;
+  }
+  .gc.filled .pip.empty { border-style: solid; border-color: var(--court-wash); background: var(--court); color: #fff; }
+
+  .count {
+    font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
+    color: var(--ink-2); margin-left: 4px;
+  }
+  .gc.urgent .count { color: var(--accent); }
+  .gc.filled .count { color: var(--court); }
+
+  .btn {
+    margin-left: auto; border: 0; border-radius: 999px;
+    padding: 8px 16px; font: inherit; font-size: 12px; font-weight: 700; letter-spacing: -.005em;
+    background: var(--accent); color: var(--accent-ink);
+    cursor: pointer; white-space: nowrap;
+    font-family: inherit;
+    transition: background .18s ease, transform .12s ease, color .18s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .btn.ghost { background: transparent; color: var(--ink-2); border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--ink-2); }
+  .btn.is-in { background: var(--court); color: #fff; }
+  .btn[disabled] { background: var(--card-2); color: var(--ink-3); cursor: default; transform: none; }
+
+  @keyframes pop { 0%{transform:scale(.4);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+  .pip.joined { animation: pop .42s cubic-bezier(.3,1.4,.5,1) both; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+    .btn:hover { transform: none; }
+  }
+
+  /* generic rows / blocks inside screens */
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--line-soft);
+  }
+  .row:last-child { border-bottom: 0; }
+  .row .txt { min-width: 0; flex: 1; }
+  .row .txt b { display: block; font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
+  .row .txt span { font-size: 11.5px; color: var(--ink-2); display: block; line-height: 1.4; }
+  .row .dist { font-size: 11px; color: var(--ink-3); font-weight: 650; font-variant-numeric: tabular-nums; flex: none; }
+  .av-lg {
+    width: 38px; height: 38px; border-radius: 50%; flex: none;
+    display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px;
+  }
+
+  .tag {
+    display: inline-block; font-size: 10px; font-weight: 650; padding: 2px 7px;
+    border-radius: 5px; background: var(--card-2); color: var(--ink-2); margin-top: 3px;
+  }
+  .tag.new { background: var(--accent-wash); color: var(--accent); }
+
+  .block {
+    border: 1px solid var(--line-soft); border-radius: 14px; padding: 11px 12px;
+    display: flex; flex-direction: column; gap: 7px; background: var(--card);
+  }
+  .block .bh { font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); }
+  .money { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .money b { color: var(--ink); font-weight: 700; }
+  .money.total { border-top: 1px solid var(--line-soft); padding-top: 7px; font-size: 14px; }
+
+  .link {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; font-weight: 650; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px;
+  }
+  .link small { display: block; font-size: 11px; font-weight: 500; color: var(--ink-3); }
+  .link .arw { color: var(--ink-3); font-size: 14px; }
+
+  /* chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip {
+    font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--ink-2); background: var(--card);
+  }
+  .chip.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .chip.off { opacity: .45; }
+
+  .pick {
+    border: 1.5px solid var(--line); border-radius: 16px; padding: 14px;
+    display: flex; align-items: center; gap: 12px; background: var(--card);
+  }
+  .pick.on { border-color: var(--ink); background: var(--card-2); }
+  .pick .ico { font-size: 24px; line-height: 1; flex: none; }
+  .pick .txt b { display: block; font-size: 15px; font-weight: 680; letter-spacing: -.01em; }
+  .pick .txt span { font-size: 11.5px; color: var(--ink-2); }
+  .pick .tick {
+    margin-left: auto; width: 20px; height: 20px; border-radius: 50%;
+    border: 1.5px solid var(--line); flex: none;
+    display: grid; place-items: center; font-size: 11px; color: transparent;
+  }
+  .pick.on .tick { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+
+  /* field */
+  .field {
+    border: 1px solid var(--line); border-radius: 11px; padding: 9px 12px;
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .field small { font-size: 10px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+  .field b { font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
+  .field.two { flex-direction: row; gap: 10px; }
+  .field.two > div { flex: 1; }
+
+  .reach {
+    background: var(--ink); color: var(--paper);
+    border-radius: 12px; padding: 11px 13px; font-size: 12.5px; line-height: 1.45;
+  }
+  .reach b { color: inherit; font-weight: 750; font-variant-numeric: tabular-nums; }
+
+  /* chat */
+  .thread { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+  .msg {
+    max-width: 78%; padding: 9px 12px; border-radius: 16px;
+    font-size: 13px; line-height: 1.4;
+    background: var(--card-2); color: var(--ink);
+    border-bottom-left-radius: 5px; align-self: flex-start;
+  }
+  .msg.me {
+    align-self: flex-end; background: var(--ink); color: var(--paper);
+    border-bottom-left-radius: 16px; border-bottom-right-radius: 5px;
+  }
+  .msg .t { display: block; font-size: 10px; opacity: .6; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .composer {
+    margin-top: auto; display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px;
+    font-size: 13px; color: var(--ink-3);
+  }
+  .composer .send { margin-left: auto; color: var(--accent); font-weight: 700; font-size: 12px; }
+
+  /* empty state */
+  .empty {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 10px; padding: 0 8px;
+  }
+  .empty .mark {
+    width: 54px; height: 54px; border-radius: 50%;
+    border: 2px dashed var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-size: 22px; font-weight: 400;
+  }
+  .empty h4 { margin: 6px 0 0; font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+  .empty p { margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; max-width: 30ch; }
+
+  /* profile */
+  .phead { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 0 4px; }
+  .phead .av-xl {
+    width: 62px; height: 62px; border-radius: 50%; background: var(--court);
+    display: grid; place-items: center; color: #fff; font-size: 22px; font-weight: 700;
+  }
+  .phead b { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+  .phead span { font-size: 12px; color: var(--ink-3); }
+  .stats { display: flex; border: 1px solid var(--line-soft); border-radius: 12px; overflow: hidden; }
+  .stats div { flex: 1; text-align: center; padding: 9px 4px; border-right: 1px solid var(--line-soft); }
+  .stats div:last-child { border-right: 0; }
+  .stats b { display: block; font-size: 17px; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .stats span { font-size: 10px; color: var(--ink-3); font-weight: 600; letter-spacing: .03em; }
+
+  /* tab bar */
+  .tabs {
+    display: flex; border-top: 1px solid var(--line-soft);
+    padding: 8px 8px 16px; background: var(--card);
+  }
+  .tabs div {
+    flex: 1; text-align: center; font-size: 9.5px; font-weight: 650;
+    color: var(--ink-3); display: flex; flex-direction: column; gap: 3px; align-items: center;
+  }
+  .tabs div.on { color: var(--ink); }
+  .tabs .g { width: 18px; height: 18px; opacity: .55; }
+  .tabs div.on .g { opacity: 1; }
+
+  /* cta bar pinned */
+  .cta {
+    border-top: 1px solid var(--line-soft); padding: 10px 16px 18px;
+    display: flex; align-items: center; gap: 10px; background: var(--card);
+  }
+  .cta .price { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+  .cta .price b { display: block; font-size: 15px; color: var(--ink); font-weight: 750; font-variant-numeric: tabular-nums; }
+  .cta .btn { padding: 12px 24px; font-size: 13.5px; }
+
+  /* ---------- deferred ---------- */
+  .later { margin-top: 88px; border-top: 1px solid var(--line); padding-top: 40px; }
+  .later h2 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 26px; margin: 0 0 6px; font-weight: 600; letter-spacing: -.01em;
+  }
+  .later > p { color: var(--ink-2); margin: 0 0 28px; max-width: 60ch; font-size: 15px; }
+  .later ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; background: var(--line-soft); border: 1px solid var(--line-soft); border-radius: 12px; overflow: hidden; }
+  .later li { background: var(--paper); padding: 14px 16px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+  .later li b { font-size: 14.5px; font-weight: 650; min-width: 190px; }
+  .later li span { font-size: 13.5px; color: var(--ink-2); flex: 1; min-width: 240px; }
+
+  @media (max-width: 620px) {
+    .wrap { padding: 0 18px 72px; }
+    .mast { padding: 48px 0 32px; }
+    .phone { max-width: 100%; margin: 0 auto; justify-self: center; }
+    figcaption { max-width: none; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="eyebrow">Hangout · v1 design board · Leicester</p>
+    <h1>Somebody near you is <em>one player short</em>.</h1>
+    <p class="lede">
+      The whole app exists to close that gap. Two activities, one city, one job: get a real person onto a
+      real court on a real Friday. Everything below is drawn for Wigston, LE18 — the actual venues, the
+      actual distances, the actual £20 court split four ways.
+    </p>
+    <div class="scope">
+      <span class="on">Cricket</span>
+      <span class="on">Badminton</span>
+      <span class="on">10 miles of LE18</span>
+      <span>Book club — later</span>
+      <span>Wallet — later</span>
+      <span>How-to videos — later</span>
+    </div>
+  </header>
+
+  <!-- ACT 1 -->
+  <section class="act">
+    <div class="act-head"><h2>Getting in</h2><div class="rule"></div></div>
+    <p class="note">
+      Two questions, then you're through. We ask what you play and roughly where you live, because those are
+      the only two things the app needs to know to be useful. No bio, no photo, no profile to "complete".
+    </p>
+
+    <div class="grid">
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="dots"><i></i><i></i><i></i><span class="batt"></span></span></div>
+          <div class="nav"><div><h3>What do you play?</h3><div class="sub">Pick everything you'd turn up for</div></div></div>
+          <div class="body pad">
+            <div class="pick on">
+              <span class="ico">🏏</span>
+              <div class="txt"><b>Cricket</b><span>Hardball, tape ball, nets, park games</span></div>
+              <span class="tick">✓</span>
+            </div>
+            <div class="pick on">
+              <span class="ico">🏸</span>
+              <div class="txt"><b>Badminton</b><span>Singles, doubles, any level</span></div>
+              <span class="tick">✓</span>
+            </div>
+            <p class="label" style="margin-top:14px">Coming as we grow</p>
+            <div class="chips">
+              <span class="chip off">Book club</span>
+              <span class="chip off">Running</span>
+              <span class="chip off">Parent &amp; toddler</span>
+              <span class="chip off">Football</span>
+              <span class="chip off">Library trips</span>
+            </div>
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:9px">
+              <div class="field"><small>Where you're based</small><b>LE18 &nbsp;·&nbsp; Wigston</b></div>
+              <div class="field"><small>Show me games within</small><b>10 miles</b></div>
+              <button class="btn" style="margin:2px 0 0; width:100%; padding:13px">Find my people</button>
+            </div>
+          </div>
+        </div></div>
+        <figcaption>
+          <b>Pick what you play</b>
+          <span>Only cricket and badminton are live. The greyed-out list is a promise, not a menu — it also tells us what to build next by what people tap.</span>
+          <span class="why">Postcode district only. Never a street address, ever.</span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="dots"><i></i><i></i><i></i><span class="batt"></span></span></div>
+          <div class="nav"><div><h3>Near you</h3><div class="sub">Within 10 miles of LE18</div></div><div class="av">S</div></div>
+          <div class="body">
+            <div class="empty">
+              <div class="mark">+</div>
+              <h4>No games yet</h4>
+              <p>You're early. There are <b>38 people</b> within 10 miles who play badminton and haven't posted anything either.</p>
+              <button class="btn" style="margin:8px 0 0; padding:11px 20px">Post the first game</button>
+              <button class="btn ghost" style="margin:0; padding:11px 20px">See who's nearby</button>
+            </div>
+          </div>
+          <div class="tabs">
+            <div class="on"><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z"/></svg>Near you</div>
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Post</div>
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0M17 11a3 3 0 100-6M21 20a6 6 0 00-4-5.6"/></svg>People</div>
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a3 3 0 01-3 3H8l-5 3V6a3 3 0 013-3h12a3 3 0 013 3z"/></svg>Chats</div>
+          </div>
+        </div></div>
+        <figcaption>
+          <b>Day one, when it's empty</b>
+          <span>The screen every local app dies on. So it's designed first, not last: it never says "nothing here" without immediately naming how many real people are within reach and what one tap would do.</span>
+          <span class="why">If this screen doesn't convert, nothing else in the app ever runs.</span>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ACT 2 -->
+  <section class="act">
+    <div class="act-head"><h2>The loop that matters</h2><div class="rule"></div></div>
+    <p class="note">
+      Somebody's short a player → everyone nearby who plays that thing gets told → one of them taps
+      <b>I'm in</b> → the court gets booked and the money gets split. That's Hangout. Tap the button on the
+      Friday game below and watch it happen.
+    </p>
+
+    <div class="grid">
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="dots"><i></i><i></i><i></i><span class="batt"></span></span></div>
+          <div class="nav"><div><h3>Near you</h3><div class="sub">Within 10 miles of LE18</div></div><div class="av">S</div></div>
+          <div class="body">
+            <p class="label">Needs a player</p>
+
+            <div class="gc urgent" id="card">
+              <div class="gc-top">
+                <span class="gc-kind" id="k">1 spot left</span>
+                <span class="gc-when">Fri · 7:00pm</span>
+              </div>
+              <h4>Friday doubles at Active Wigston</h4>
+              <div class="meta">Badminton <i></i> 1.2 miles <i></i> Court 3</div>
+              <div class="gc-foot">
+                <div class="slots">
+                  <span class="pip p1">TM</span>
+                  <span class="pip p2">PR</span>
+                  <span class="pip p3">DK</span>
+                  <span class="pip empty" id="slot">+</span>
+                </div>
+                <span class="count" id="cnt">3/4</span>
+                <button class="btn" id="join">I'm in</button>
+              </div>
+            </div>
+
+            <div class="gc urgent">
+              <div class="gc-top">
+                <span class="gc-kind">3 spots left</span>
+                <span class="gc-when">Sun · 10:00am</span>
+              </div>
+              <h4>Sunday tape-ball at Evington Park</h4>
+              <div class="meta">Cricket <i></i> 3.4 miles <i></i> Free to play</div>
+              <div class="gc-foot">
+                <div class="slots">
+                  <span class="pip p4">AR</span>
+                  <span class="pip p5">RJ</span>
+                  <span class="pip p1">+6</span>
+                  <span class="pip empty">+</span>
+                </div>
+                <span class="count">8/11</span>
+                <button class="btn">I'm in</button>
+              </div>
+            </div>
+
+            <p class="label">Sorted</p>
+            <div class="gc filled">
+              <div class="gc-top">
+                <span class="gc-kind">Full · you're playing</span>
+                <span class="gc-when">Tue · 8:00pm</span>
+              </div>
+              <h4>Tuesday singles ladder</h4>
+              <div class="meta">Badminton <i></i> Aylestone Leisure Centre</div>
+              <div class="gc-foot">
+                <div class="slots">
+                  <span class="pip p2">PR</span><span class="pip p3">DK</span>
+                  <span class="pip p4">ME</span><span class="pip empty">✓</span>
+                </div>
+                <span class="count">4/4</span>
+                <button class="btn ghost">Open</button>
+              </div>
+            </div>
+          </div>
+          <div class="tabs">
+            <div class="on"><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z"/></svg>Near you</div>
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Post</div>
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0M17 11a3 3 0 100-6M21 20a6 6 0 00-4-5.6"/></svg>People</div>
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a3 3 0 01-3 3H8l-5 3V6a3 3 0 013-3h12a3 3 0 013 3z"/></svg>Chats</div>
+          </div>
+        </div></div>
+        <figcaption>
+          <b>Near you — the home screen</b>
+          <span>Not a feed. A list of holes that need filling, sorted by how soon and how close. Red means someone is missing; green means it's sorted. The dashed circle is the entire product.</span>
+          <span class="why">Tap "I'm in" — it works.</span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="dots"><i></i><i></i><i></i><span class="batt"></span></span></div>
+          <div class="nav"><span class="back">‹</span><div><h3>Friday doubles</h3><div class="sub">Fri 12 Sep · 7:00–8:00pm</div></div></div>
+          <div class="body">
+            <div class="link">
+              <div>Active Wigston, Station Rd<small>Court 3 · 1.2 miles · LE18 2DS</small></div>
+              <span class="arw">↗</span>
+            </div>
+
+            <div class="block">
+              <span class="bh">Playing</span>
+              <div class="slots" style="padding:2px 0 4px">
+                <span class="pip p1">TM</span><span class="pip p2">PR</span><span class="pip p3">DK</span>
+                <span class="pip empty" id="slot2">+</span>
+              </div>
+              <div class="money" style="border:0;padding:0">
+                <span id="who">Tom, Priya and Dan</span>
+                <b id="cnt2">3/4</b>
+              </div>
+            </div>
+
+            <div class="block">
+              <span class="bh">Cost</span>
+              <div class="money"><span>Court hire, 1 hour</span><b>£20.00</b></div>
+              <div class="money"><span>Split 4 ways</span><b>£5.00 each</b></div>
+              <div class="money total"><span>You'd pay</span><b>£5.00</b></div>
+            </div>
+
+            <div class="link">
+              <div>Book it at Active Wigston<small>Opens their site — we don't take bookings</small></div>
+              <span class="arw">↗</span>
+            </div>
+
+            <div class="block">
+              <span class="bh">Chat · 4 messages</span>
+              <div class="money" style="border:0;padding:0;font-size:12px">
+                <span><b style="font-weight:650">Tom</b> · Dan's out, need a 4th 😬</span>
+              </div>
+            </div>
+          </div>
+          <div class="cta">
+            <div class="price">Your share<b>£5.00</b></div>
+            <button class="btn" id="join2">I'm in</button>
+          </div>
+        </div></div>
+        <figcaption>
+          <b>The game</b>
+          <span>Venue, who's playing, what it costs you, and the link out to the leisure centre's own booking page. We never touch the booking or the money in v1 — we just make both obvious.</span>
+          <span class="why">"£5.00" answers the only question that stops people committing.</span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="dots"><i></i><i></i><i></i><span class="batt"></span></span></div>
+          <div class="nav"><span class="back">‹</span><div><h3>Post a game</h3><div class="sub">Takes about 20 seconds</div></div></div>
+          <div class="body">
+            <div class="chips" style="margin-bottom:2px">
+              <span class="chip on">🏸 Badminton</span>
+              <span class="chip">🏏 Cricket</span>
+            </div>
+            <div class="field two">
+              <div><small>Day</small><b>Fri 12 Sep</b></div>
+              <div><small>Time</small><b>7:00pm</b></div>
+            </div>
+            <div class="field"><small>Where</small><b>Active Wigston · Court 3</b></div>
+            <div class="field two">
+              <div><small>Players needed</small><b>4</b></div>
+              <div><small>Court cost</small><b>£20.00</b></div>
+            </div>
+            <div class="field"><small>Anything else?</small><b style="font-weight:500;color:var(--ink-3)">Beginners welcome, we're not serious</b></div>
+
+            <div class="reach" style="margin-top:4px">
+              This goes to <b>38 people</b> within 10 miles who play badminton — including <b>11</b> who've
+              never played with anyone on Hangout yet.
+            </div>
+
+            <button class="btn" style="width:100%; padding:13px; margin-top:auto">Post it</button>
+          </div>
+        </div></div>
+        <figcaption>
+          <b>Post a game</b>
+          <span>The supply side. Six fields, no account setup, no "create an event". The line that matters is the black box: it tells the poster their shout is actually going to land somewhere.</span>
+          <span class="why">Nobody posts into a void. Show them the void isn't empty.</span>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ACT 3 -->
+  <section class="act">
+    <div class="act-head"><h2>The people</h2><div class="rule"></div></div>
+    <p class="note">
+      The original problem was never "no pitches". It was "nobody to ask". So there's a screen whose only
+      job is to prove that someone near you plays your game — and a way to say hello that isn't weird.
+    </p>
+
+    <div class="grid">
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="dots"><i></i><i></i><i></i><span class="batt"></span></span></div>
+          <div class="nav"><div><h3>People near you</h3><div class="sub">12 play cricket · 38 play badminton</div></div></div>
+          <div class="body">
+            <div class="chips" style="margin-bottom:4px">
+              <span class="chip on">Both</span><span class="chip">🏏 Cricket</span><span class="chip">🏸 Badminton</span>
+            </div>
+            <div style="overflow:hidden">
+              <div class="row">
+                <span class="av-lg" style="background:#3C7A5A">AR</span>
+                <div class="txt"><b>Arjun R.</b><span>Cricket · Badminton</span><span class="tag new">New to Leicester</span></div>
+                <span class="dist">0.8 mi</span>
+              </div>
+              <div class="row">
+                <span class="av-lg" style="background:#7A4E9B">PR</span>
+                <div class="txt"><b>Priya R.</b><span>Badminton · plays most Fridays</span><span class="tag">Active Wigston</span></div>
+                <span class="dist">1.1 mi</span>
+              </div>
+              <div class="row">
+                <span class="av-lg" style="background:#2F6F8F">TM</span>
+                <div class="txt"><b>Tom M.</b><span>Badminton · runs the Friday game</span><span class="tag">Hosts games</span></div>
+                <span class="dist">1.4 mi</span>
+              </div>
+              <div class="row">
+                <span class="av-lg" style="background:#B0653C">RJ</span>
+                <div class="txt"><b>Rehan J.</b><span>Cricket · Sunday tape-ball at Evington</span><span class="tag">Hosts games</span></div>
+                <span class="dist">3.2 mi</span>
+              </div>
+              <div class="row">
+                <span class="av-lg" style="background:#8F4358">ME</span>
+                <div class="txt"><b>Meera E.</b><span>Badminton · beginner, keen to learn</span><span class="tag new">New to Leicester</span></div>
+                <span class="dist">4.6 mi</span>
+              </div>
+            </div>
+          </div>
+          <div class="tabs">
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z"/></svg>Near you</div>
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Post</div>
+            <div class="on"><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0M17 11a3 3 0 100-6M21 20a6 6 0 00-4-5.6"/></svg>People</div>
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a3 3 0 01-3 3H8l-5 3V6a3 3 0 013-3h12a3 3 0 013 3z"/></svg>Chats</div>
+          </div>
+        </div></div>
+        <figcaption>
+          <b>People near you</b>
+          <span>The answer to "is there even a single person round here who plays?" — first names and an approximate distance, nothing more. "New to Leicester" is a badge, not a stigma: it's how you find the person in your own shoes.</span>
+          <span class="why">Distance is rounded and fuzzed. No map, no pins, no home addresses.</span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="dots"><i></i><i></i><i></i><span class="batt"></span></span></div>
+          <div class="nav"><span class="back">‹</span><div><h3>Arjun R.</h3><div class="sub">0.8 miles · new to Leicester</div></div><div class="av" style="background:#3C7A5A">AR</div></div>
+          <div class="body">
+            <div class="thread">
+              <div class="msg">
+                Saw you play cricket — I moved here from Pune in March and haven't found a game yet. Any chance you know one?
+                <span class="t">Tue 21:04</span>
+              </div>
+              <div class="msg me">
+                Ha, I was exactly you ten years ago. There's tape-ball at Evington Park most Sundays, 10am. Very casual.
+                <span class="t">Tue 21:11</span>
+              </div>
+              <div class="msg me">
+                I've put you on the Sunday game — 8 of us so far. Just turn up.
+                <span class="t">Tue 21:12</span>
+              </div>
+              <div class="msg">
+                Mate, thank you. I'll be there.
+                <span class="t">Tue 21:15</span>
+              </div>
+            </div>
+            <div class="composer">Message Arjun…<span class="send">Send</span></div>
+          </div>
+        </div></div>
+        <figcaption>
+          <b>Just a message</b>
+          <span>No matching, no swiping, no algorithm. Someone plays the thing you play and lives near you — that's enough of a reason to say hello, and the app should get out of the way at that point.</span>
+          <span class="why">This exact conversation is the one you never got to have.</span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="phone"><div class="screen">
+          <div class="status"><span>9:41</span><span class="dots"><i></i><i></i><i></i><span class="batt"></span></span></div>
+          <div class="nav"><div><h3>You</h3></div><div class="sub" style="margin-left:auto">Edit</div></div>
+          <div class="body">
+            <div class="phead">
+              <span class="av-xl">S</span>
+              <b>Shiv</b>
+              <span>Wigston, LE18 · joined March</span>
+            </div>
+            <div class="chips" style="justify-content:center; margin:2px 0 8px">
+              <span class="chip on">🏏 Cricket</span><span class="chip on">🏸 Badminton</span>
+            </div>
+            <div class="stats">
+              <div><b>7</b><span>GAMES</span></div>
+              <div><b>11</b><span>PLAYED WITH</span></div>
+              <div><b>2</b><span>HOSTED</span></div>
+            </div>
+
+            <p class="label">Your regulars</p>
+            <div class="block">
+              <div class="money" style="border:0;padding:0">
+                <span><b style="font-weight:650">Friday doubles</b> · Active Wigston</span>
+                <b>4</b>
+              </div>
+              <div class="money" style="border:0;padding:0">
+                <span><b style="font-weight:650">Sunday tape-ball</b> · Evington Park</span>
+                <b>11</b>
+              </div>
+            </div>
+
+            <p class="label">Nearby</p>
+            <div class="link">
+              <div>Get told when someone needs a player<small>Within 10 miles · badminton &amp; cricket</small></div>
+              <span class="arw" style="color:var(--court)">●</span>
+            </div>
+          </div>
+          <div class="tabs">
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z"/></svg>Near you</div>
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Post</div>
+            <div><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0M17 11a3 3 0 100-6M21 20a6 6 0 00-4-5.6"/></svg>People</div>
+            <div class="on"><svg class="g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a3 3 0 01-3 3H8l-5 3V6a3 3 0 013-3h12a3 3 0 013 3z"/></svg>You</div>
+          </div>
+        </div></div>
+        <figcaption>
+          <b>You</b>
+          <span>A profile that's a record of games played, not a personality to perform. The one switch that matters sits at the bottom: the notification that pings you when somebody within 10 miles is short a player.</span>
+          <span class="why">"Played with 11 people" is the number that means it worked.</span>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- deferred -->
+  <section class="later">
+    <h2>Deliberately not in v1</h2>
+    <p>Everything you described is in here — it's just queued behind the one thing that has to work first.</p>
+    <ul>
+      <li><b>Wallet &amp; split payments</b><span>Holding money in the UK means FCA permissions and KYC. v1 shows "£5.00 each" and links out; a real wallet arrives once people are actually playing.</span></li>
+      <li><b>How-to-play videos</b><span>The embedded YouTube guides and likes. Genuinely good for beginners like Meera — but it retains people who already came, it doesn't bring them.</span></li>
+      <li><b>Book club, library, parent &amp; toddler</b><span>Same app, different chip. Turning them on is a config change once cricket and badminton have proved the loop in Leicester.</span></li>
+      <li><b>Communities &amp; groups</b><span>Right now a "community" is just the people on a recurring game. Formal groups earn their place when a game outgrows its four players.</span></li>
+      <li><b>In-app booking</b><span>We'll always link out to Active Wigston and the rest. Becoming a booking engine is a different, much worse company.</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<script>
+  (function () {
+    function wire(btnId, slotId, cntId, opts) {
+      var btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.addEventListener("click", function () {
+        if (btn.classList.contains("is-in")) return;
+        var slot = document.getElementById(slotId);
+        var cnt  = document.getElementById(cntId);
+        slot.classList.remove("empty");
+        slot.classList.add("p4", "joined");
+        slot.textContent = "S";
+        cnt.textContent = "4/4";
+        btn.textContent = "You're in ✓";
+        btn.classList.add("is-in");
+        if (opts.card) {
+          var card = document.getElementById(opts.card);
+          card.classList.remove("urgent");
+          card.classList.add("filled");
+          document.getElementById(opts.kind).textContent = "Full · you're playing";
+        }
+        if (opts.who) document.getElementById(opts.who).textContent = "Tom, Priya, Dan and you";
+      });
+    }
+    wire("join",  "slot",  "cnt",  { card: "card", kind: "k" });
+    wire("join2", "slot2", "cnt2", { who: "who" });
+  })();
+</script>

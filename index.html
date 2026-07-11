@@ -1,0 +1,1246 @@
+<title>Hangout — walkthrough prototype</title>
+
+<style>
+  :root {
+    --ink:#0F1512; --ink-2:#3D4A43; --ink-3:#6B7A72;
+    --paper:#E8EAE4; --card:#FCFDFB; --card-2:#F1F3EE;
+    --line:#C9CEC5; --line-soft:#DEE2DA;
+    --accent:#E8452F; --accent-ink:#FFFFFF; --accent-wash:#FCE9E5;
+    --court:#0B6E4F; --court-wash:#DDEDE5;
+    --bezel:#12180F;
+    --shadow:0 1px 2px rgba(15,21,18,.06), 0 24px 60px -20px rgba(15,21,18,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink:#E9ECE5; --ink-2:#A9B4AC; --ink-3:#7C8981;
+      --paper:#0A0E0C; --card:#171F1A; --card-2:#1E2721;
+      --line:#2C382F; --line-soft:#232D26;
+      --accent:#FF6248; --accent-ink:#1A0B07; --accent-wash:#3A1A13;
+      --court:#35BE8B; --court-wash:#16302650;
+      --bezel:#000000;
+      --shadow:0 1px 2px rgba(0,0,0,.5), 0 24px 60px -20px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink:#E9ECE5; --ink-2:#A9B4AC; --ink-3:#7C8981;
+    --paper:#0A0E0C; --card:#171F1A; --card-2:#1E2721;
+    --line:#2C382F; --line-soft:#232D26;
+    --accent:#FF6248; --accent-ink:#1A0B07; --accent-wash:#3A1A13;
+    --court:#35BE8B; --court-wash:#16302650;
+    --bezel:#000000;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 24px 60px -20px rgba(0,0,0,.8);
+  }
+  :root[data-theme="light"] {
+    --ink:#0F1512; --ink-2:#3D4A43; --ink-3:#6B7A72;
+    --paper:#E8EAE4; --card:#FCFDFB; --card-2:#F1F3EE;
+    --line:#C9CEC5; --line-soft:#DEE2DA;
+    --accent:#E8452F; --accent-ink:#FFFFFF; --accent-wash:#FCE9E5;
+    --court:#0B6E4F; --court-wash:#DDEDE5;
+    --bezel:#12180F;
+    --shadow:0 1px 2px rgba(15,21,18,.06), 0 24px 60px -20px rgba(15,21,18,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin:0; min-height:100vh; background:var(--paper); color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  #device {
+    width:100%; max-width:390px; height:100vh; max-height:844px;
+    background:var(--card); position:relative; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  @media (min-width:640px) and (min-height:700px) {
+    body { padding:32px; }
+    #device {
+      border-radius:44px; box-shadow:var(--shadow);
+      outline:10px solid var(--bezel); outline-offset:0;
+      height:844px;
+    }
+  }
+
+  /* status bar */
+  .status {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 24px 2px; font-size:12px; font-weight:650;
+    font-variant-numeric:tabular-nums; flex:none;
+  }
+  .status .r { display:flex; gap:4px; align-items:center; }
+  .status .r i { width:3px; height:3px; border-radius:50%; background:currentColor; display:block; }
+  .status .b { width:20px; height:10px; border:1.3px solid currentColor; border-radius:3px; position:relative; }
+  .status .b::after { content:""; position:absolute; inset:1.6px; right:6px; background:currentColor; border-radius:1px; }
+
+  /* nav */
+  .nav {
+    flex:none; padding:6px 20px 10px;
+    display:flex; align-items:center; gap:12px; min-height:48px;
+  }
+  .nav .titles { min-width:0; flex:1; }
+  .nav h1 { margin:0; font-size:22px; font-weight:750; letter-spacing:-.025em; line-height:1.2; }
+  .nav .sub { font-size:11.5px; color:var(--ink-3); font-weight:550; }
+  .nav .back {
+    font-size:26px; line-height:1; color:var(--ink-2); background:none; border:0;
+    padding:0 2px 4px 0; cursor:pointer; font-family:inherit; flex:none;
+  }
+  .nav .act {
+    background:none; border:0; font:inherit; font-size:14px; font-weight:650;
+    color:var(--accent); cursor:pointer; flex:none; padding:0;
+  }
+
+  /* scroll body */
+  main {
+    flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:2px 20px 20px; display:flex; flex-direction:column; gap:12px;
+  }
+  main.center { justify-content:center; text-align:center; align-items:center; }
+  main::-webkit-scrollbar { width:0; }
+
+  h2.sec {
+    font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-3); margin:8px 0 -4px;
+  }
+  p.copy { margin:0; font-size:14px; color:var(--ink-2); line-height:1.55; }
+
+  /* buttons */
+  .btn {
+    border:0; border-radius:999px; padding:14px 22px;
+    font:inherit; font-size:15px; font-weight:700; letter-spacing:-.01em;
+    background:var(--accent); color:var(--accent-ink); cursor:pointer;
+    transition:transform .12s ease, opacity .15s ease; width:100%;
+  }
+  .btn:active { transform:scale(.97); }
+  .btn:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
+  .btn.sm { padding:9px 16px; font-size:12.5px; width:auto; }
+  .btn.ghost { background:transparent; color:var(--ink); border:1px solid var(--line); }
+  .btn.dark { background:var(--ink); color:var(--paper); }
+  .btn.green { background:var(--court); color:#fff; }
+  .btn.flat { background:transparent; color:var(--ink-3); font-weight:600; font-size:13px; padding:10px; }
+  .btn[disabled] { opacity:.4; cursor:default; }
+
+  /* inputs */
+  .field { display:flex; flex-direction:column; gap:5px; }
+  .field label {
+    font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);
+  }
+  .field input, .field select, .field textarea {
+    font:inherit; font-size:16px; color:var(--ink); background:var(--card);
+    border:1px solid var(--line); border-radius:12px; padding:13px 14px; width:100%;
+    -webkit-appearance:none; appearance:none;
+  }
+  .field textarea { resize:none; min-height:64px; font-size:15px; }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline:none; border-color:var(--ink); }
+  .field select {
+    background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 21px, calc(100% - 13px) 21px;
+    background-size:5px 5px, 5px 5px; background-repeat:no-repeat;
+  }
+  .two { display:flex; gap:10px; } .two > * { flex:1; min-width:0; }
+
+  /* interest picker */
+  .pick {
+    display:flex; align-items:center; gap:13px; width:100%; text-align:left;
+    border:1.5px solid var(--line); border-radius:16px; padding:15px;
+    background:var(--card); color:var(--ink); font:inherit; cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .pick[aria-pressed="true"] { border-color:var(--ink); background:var(--card-2); }
+  .pick .ico { font-size:26px; line-height:1; flex:none; }
+  .pick .t b { display:block; font-size:15.5px; font-weight:680; letter-spacing:-.01em; }
+  .pick .t span { font-size:12px; color:var(--ink-2); }
+  .pick .tick {
+    margin-left:auto; width:22px; height:22px; border-radius:50%; flex:none;
+    border:1.5px solid var(--line); display:grid; place-items:center;
+    font-size:12px; color:transparent;
+  }
+  .pick[aria-pressed="true"] .tick { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+  .pick[disabled] { opacity:.4; cursor:default; }
+
+  .chips { display:flex; flex-wrap:wrap; gap:7px; }
+  .chip {
+    font:inherit; font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:999px;
+    border:1px solid var(--line); color:var(--ink-2); background:var(--card); cursor:pointer;
+  }
+  .chip[aria-pressed="true"] { background:var(--ink); border-color:var(--ink); color:var(--paper); }
+
+  /* game card */
+  .gc {
+    border:1px solid var(--line-soft); border-radius:18px; background:var(--card);
+    padding:13px 14px; display:flex; flex-direction:column; gap:10px;
+    cursor:pointer; text-align:left; font:inherit; color:var(--ink); width:100%;
+    transition:transform .12s ease;
+  }
+  .gc:active { transform:scale(.985); }
+  .gc.urgent { border-color:var(--accent); background:var(--accent-wash); }
+  .gc.filled { border-color:var(--court); background:var(--court-wash); }
+  .gc .top { display:flex; align-items:center; gap:8px; }
+  .gc .kind { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); }
+  .gc.urgent .kind { color:var(--accent); }
+  .gc.filled .kind { color:var(--court); }
+  .gc .when { margin-left:auto; font-size:11.5px; color:var(--ink-3); font-weight:650; font-variant-numeric:tabular-nums; }
+  .gc h3 { margin:0; font-size:17px; font-weight:700; letter-spacing:-.02em; line-height:1.25; }
+  .gc .meta { font-size:12.5px; color:var(--ink-2); display:flex; gap:7px; align-items:center; flex-wrap:wrap; }
+  .gc .meta i { width:3px; height:3px; border-radius:50%; background:var(--ink-3); display:block; flex:none; }
+  .gc .foot { display:flex; align-items:center; gap:10px; }
+
+  .slots { display:flex; align-items:center; }
+  .slots > * + * { margin-left:-7px; }
+  .pip {
+    width:28px; height:28px; border-radius:50%; border:2px solid var(--card);
+    display:grid; place-items:center; font-size:10.5px; font-weight:700; color:#fff;
+    background:var(--ink-2); flex:none;
+  }
+  .gc.urgent .pip { border-color:var(--accent-wash); }
+  .gc.filled .pip { border-color:var(--court-wash); }
+  .pip.empty { background:transparent; border:2px dashed var(--accent); color:var(--accent); font-weight:500; font-size:14px; }
+  .gc.filled .pip.empty { border:2px solid var(--court); background:var(--court); color:#fff; }
+  .count { font-size:12.5px; font-weight:750; font-variant-numeric:tabular-nums; color:var(--ink-2); margin-left:5px; }
+  .gc.urgent .count { color:var(--accent); }
+  .gc.filled .count { color:var(--court); }
+  .gc .foot .btn { margin-left:auto; }
+
+  @keyframes pop { 0%{transform:scale(.3);opacity:0} 65%{transform:scale(1.18)} 100%{transform:scale(1);opacity:1} }
+  .pop { animation:pop .45s cubic-bezier(.3,1.5,.5,1) both; }
+  @keyframes slidein { from{transform:translateY(-120%);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes fadeup { from{transform:translateY(8px);opacity:0} to{transform:translateY(0);opacity:1} }
+  main > * { animation:fadeup .3s ease both; }
+  @media (prefers-reduced-motion:reduce) { *,main>* { animation:none!important; transition:none!important; } }
+
+  /* rows */
+  .row {
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    padding:12px 0; border-bottom:1px solid var(--line-soft);
+    background:none; border-left:0; border-right:0; border-top:0; font:inherit; color:var(--ink); cursor:pointer;
+  }
+  .row:last-child { border-bottom:0; }
+  .row .t { flex:1; min-width:0; }
+  .row .t b { display:block; font-size:15px; font-weight:680; letter-spacing:-.01em; }
+  .row .t span { display:block; font-size:12px; color:var(--ink-2); line-height:1.45; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row .far { font-size:11.5px; color:var(--ink-3); font-weight:650; font-variant-numeric:tabular-nums; flex:none; }
+  .av {
+    width:42px; height:42px; border-radius:50%; flex:none; display:grid; place-items:center;
+    color:#fff; font-weight:700; font-size:14px;
+  }
+  .av.sm { width:30px; height:30px; font-size:11px; }
+  .tag { display:inline-block; font-size:10px; font-weight:650; padding:2px 7px; border-radius:5px;
+    background:var(--card-2); color:var(--ink-2); margin-top:4px; }
+  .tag.new { background:var(--accent-wash); color:var(--accent); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--accent); flex:none; }
+
+  /* block */
+  .block {
+    border:1px solid var(--line-soft); border-radius:16px; padding:13px 14px;
+    display:flex; flex-direction:column; gap:9px; background:var(--card);
+  }
+  .block .bh { font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); }
+  .lr { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+  .lr b { color:var(--ink); font-weight:700; }
+  .lr.total { border-top:1px solid var(--line-soft); padding-top:9px; font-size:15px; }
+
+  .link {
+    display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; text-align:left;
+    font:inherit; font-size:14px; font-weight:650; color:var(--ink); cursor:pointer;
+    border:1px solid var(--line); border-radius:14px; padding:12px 14px; background:var(--card);
+  }
+  .link small { display:block; font-size:11.5px; font-weight:500; color:var(--ink-3); margin-top:1px; }
+  .link .arw { color:var(--ink-3); font-size:15px; flex:none; }
+  .link.done { border-color:var(--court); background:var(--court-wash); }
+  .link.done .arw { color:var(--court); }
+
+  .reach { background:var(--ink); color:var(--paper); border-radius:14px; padding:13px 15px; font-size:13px; line-height:1.5; }
+  .reach b { font-weight:750; font-variant-numeric:tabular-nums; }
+
+  /* empty */
+  .empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:11px; text-align:center; flex:1; padding:20px 0; }
+  .empty .mark { width:62px; height:62px; border-radius:50%; border:2px dashed var(--accent); color:var(--accent);
+    display:grid; place-items:center; font-size:26px; font-weight:300; }
+  .empty h3 { margin:6px 0 0; font-size:19px; font-weight:750; letter-spacing:-.02em; }
+  .empty p { margin:0; font-size:13.5px; color:var(--ink-2); line-height:1.55; max-width:30ch; }
+  .empty .btn { margin-top:8px; max-width:240px; }
+
+  /* chat */
+  .thread { display:flex; flex-direction:column; gap:9px; padding-top:6px; }
+  .msg { max-width:80%; padding:10px 13px; border-radius:18px; font-size:14px; line-height:1.45;
+    background:var(--card-2); color:var(--ink); border-bottom-left-radius:5px; align-self:flex-start;
+    animation:fadeup .25s ease both; }
+  .msg.me { align-self:flex-end; background:var(--ink); color:var(--paper);
+    border-bottom-left-radius:18px; border-bottom-right-radius:5px; }
+  .msg .t { display:block; font-size:10px; opacity:.55; margin-top:4px; font-variant-numeric:tabular-nums; }
+  .msg .who { display:block; font-size:10.5px; font-weight:700; opacity:.6; margin-bottom:2px; }
+  .composer { flex:none; display:flex; gap:8px; align-items:center; padding:10px 20px 18px; border-top:1px solid var(--line-soft); }
+  .composer input {
+    flex:1; font:inherit; font-size:16px; color:var(--ink); background:var(--card-2);
+    border:1px solid transparent; border-radius:999px; padding:11px 16px; -webkit-appearance:none;
+  }
+  .composer input:focus { outline:none; border-color:var(--line); }
+  .composer button { background:none; border:0; font:inherit; font-size:14px; font-weight:750; color:var(--accent); cursor:pointer; padding:6px; flex:none; }
+
+  /* profile head */
+  .phead { display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px 0 2px; }
+  .phead .av { width:70px; height:70px; font-size:24px; }
+  .phead b { font-size:20px; font-weight:750; letter-spacing:-.02em; }
+  .phead span { font-size:12.5px; color:var(--ink-3); }
+  .stats { display:flex; border:1px solid var(--line-soft); border-radius:14px; overflow:hidden; }
+  .stats div { flex:1; text-align:center; padding:11px 4px; border-right:1px solid var(--line-soft); }
+  .stats div:last-child { border-right:0; }
+  .stats b { display:block; font-size:19px; font-weight:750; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+  .stats span { font-size:9.5px; color:var(--ink-3); font-weight:700; letter-spacing:.05em; }
+
+  .toggle { width:44px; height:26px; border-radius:999px; background:var(--line); position:relative; flex:none;
+    border:0; cursor:pointer; transition:background .18s ease; }
+  .toggle::after { content:""; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%;
+    background:#fff; transition:transform .18s ease; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+  .toggle[aria-pressed="true"] { background:var(--court); }
+  .toggle[aria-pressed="true"]::after { transform:translateX(18px); }
+
+  /* tabs */
+  nav.tabs { flex:none; display:flex; border-top:1px solid var(--line-soft); padding:8px 6px 20px; background:var(--card); }
+  nav.tabs button {
+    flex:1; background:none; border:0; font:inherit; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    font-size:9.5px; font-weight:650; color:var(--ink-3); padding:4px 0; position:relative;
+  }
+  nav.tabs button[aria-current="page"] { color:var(--ink); }
+  nav.tabs svg { width:21px; height:21px; opacity:.5; }
+  nav.tabs button[aria-current="page"] svg { opacity:1; }
+  nav.tabs .badge {
+    position:absolute; top:0; right:calc(50% - 16px); min-width:16px; height:16px; padding:0 4px;
+    background:var(--accent); color:var(--accent-ink); border-radius:999px;
+    font-size:9.5px; font-weight:750; display:grid; place-items:center; font-variant-numeric:tabular-nums;
+  }
+
+  /* cta bar */
+  .cta { flex:none; display:flex; align-items:center; gap:12px; padding:12px 20px 20px; border-top:1px solid var(--line-soft); background:var(--card); }
+  .cta .price { font-size:11.5px; color:var(--ink-3); font-weight:650; flex:none; }
+  .cta .price b { display:block; font-size:17px; color:var(--ink); font-weight:750; font-variant-numeric:tabular-nums; }
+  .cta .btn { width:auto; flex:1; }
+
+  /* push banner */
+  #push {
+    position:absolute; top:10px; left:12px; right:12px; z-index:50;
+    background:var(--ink); color:var(--paper); border-radius:18px; padding:12px 14px;
+    display:none; gap:11px; align-items:center; cursor:pointer; text-align:left;
+    box-shadow:0 12px 32px -8px rgba(0,0,0,.5); border:0; font:inherit; width:calc(100% - 24px);
+  }
+  #push.show { display:flex; animation:slidein .35s cubic-bezier(.2,1,.3,1) both; }
+  #push .ic { width:32px; height:32px; border-radius:9px; background:var(--accent); color:var(--accent-ink);
+    display:grid; place-items:center; font-size:15px; flex:none; }
+  #push .t { min-width:0; }
+  #push .t b { display:block; font-size:13px; font-weight:700; }
+  #push .t span { display:block; font-size:12px; opacity:.75; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* toast */
+  #toast {
+    position:absolute; bottom:96px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--paper); padding:11px 18px; border-radius:999px;
+    font-size:13px; font-weight:600; z-index:60; display:none; white-space:nowrap;
+    box-shadow:0 8px 24px -6px rgba(0,0,0,.4);
+  }
+  #toast.show { display:block; animation:fadeup .25s ease both; }
+
+  /* sheet */
+  #sheet { position:absolute; inset:0; z-index:70; display:none; }
+  #sheet.show { display:block; }
+  #sheet .scrim { position:absolute; inset:0; background:rgba(8,12,10,.5); border:0; width:100%; cursor:pointer; }
+  #sheet .panel {
+    position:absolute; left:0; right:0; bottom:0; background:var(--card);
+    border-radius:24px 24px 0 0; padding:22px 20px 26px;
+    display:flex; flex-direction:column; gap:12px;
+    animation:slideup .3s cubic-bezier(.2,1,.3,1) both;
+  }
+  @keyframes slideup { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  #sheet h3 { margin:0; font-size:19px; font-weight:750; letter-spacing:-.02em; }
+  #sheet p { margin:0; font-size:13.5px; color:var(--ink-2); line-height:1.55; }
+
+  .brand {
+    font-size:44px; font-weight:800; letter-spacing:-.045em; margin:0;
+    line-height:1;
+  }
+  .brand em { font-style:normal; color:var(--accent); }
+  .demo-note { font-size:11px; color:var(--ink-3); text-align:center; line-height:1.5; }
+</style>
+
+<div id="device">
+  <div class="status"><span id="clock">9:41</span><span class="r"><i></i><i></i><i></i><span class="b"></span></span></div>
+  <button id="push" type="button"></button>
+  <div id="root" style="flex:1; display:flex; flex-direction:column; min-height:0;"></div>
+  <div id="toast"></div>
+  <div id="sheet"></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- data ---------------- */
+  var KEY = "hangout.v1";
+  var COLORS = { AR:"#3C7A5A", PR:"#7A4E9B", TM:"#2F6F8F", RJ:"#B0653C", ME:"#8F4358", DK:"#4A6B8A", CW:"#6B7A3C" };
+  var NEARBY = { badminton: 38, cricket: 12 };
+
+  var PEOPLE = [
+    { id:"ar", name:"Arjun R.", first:"Arjun", ini:"AR", far:0.8, plays:["cricket","badminton"], blurb:"Cricket · Badminton", tag:"New to Leicester", tagNew:true },
+    { id:"pr", name:"Priya R.", first:"Priya", ini:"PR", far:1.1, plays:["badminton"], blurb:"Badminton · plays most Fridays", tag:"Active Wigston" },
+    { id:"tm", name:"Tom M.",   first:"Tom",   ini:"TM", far:1.4, plays:["badminton"], blurb:"Badminton · runs the Friday game", tag:"Hosts games" },
+    { id:"rj", name:"Rehan J.", first:"Rehan", ini:"RJ", far:3.2, plays:["cricket"], blurb:"Cricket · Sunday tape-ball at Evington", tag:"Hosts games" },
+    { id:"me", name:"Meera E.", first:"Meera", ini:"ME", far:4.6, plays:["badminton"], blurb:"Badminton · beginner, keen to learn", tag:"New to Leicester", tagNew:true },
+    { id:"dk", name:"Dan K.",   first:"Dan",   ini:"DK", far:2.0, plays:["badminton","cricket"], blurb:"Badminton · Tuesday ladder", tag:"" },
+    { id:"cw", name:"Chris W.", first:"Chris", ini:"CW", far:5.1, plays:["cricket"], blurb:"Cricket · hardball, Grace Road nets", tag:"" }
+  ];
+  function person(id) { for (var i=0;i<PEOPLE.length;i++) if (PEOPLE[i].id===id) return PEOPLE[i]; return null; }
+  function p2p(id) { var p = person(id); return { id:p.id, name:p.first, ini:p.ini }; }
+
+  var REPLIES = {
+    ar:["Mate, thank you. I'll be there.","That's brilliant — I've been here since March and not swung a bat once.","Perfect. See you Sunday 🏏"],
+    pr:["Yes! We're always short on Fridays.","Sounds good — Court 3, 7pm.","👍"],
+    tm:["Brilliant, see you Friday 👊","Court's booked, just bring trainers.","No worries, all levels welcome."],
+    rj:["Course, just turn up. It's a friendly game.","We start about 10, usually go till 12.","Nice one 🏏"],
+    me:["Oh good, I'm a total beginner so no pressure!","I'd love that, thank you.","See you there 🏸"],
+    dk:["Yeah I'm about most Tuesdays.","Cool, add me in.","👍"],
+    cw:["Nets are decent at Grace Road, worth a go.","Let me know when you're playing.","👍"]
+  };
+
+  function seedGames() {
+    return [
+      { id:"g1", activity:"badminton", title:"Friday doubles at Active Wigston",
+        venue:"Active Wigston, Station Rd", court:"Court 3", far:1.2, day:nextDow(5), time:"7:00pm",
+        cost:20, need:4, host:"tm", players:[p2p("tm"),p2p("pr"),p2p("dk")],
+        note:"Dan's mate dropped out. Beginners welcome, we're not serious.",
+        booked:false, paid:[], msgs:[
+          { from:"tm", text:"Right, we're a player down for Friday 😬", ago:180 },
+          { from:"pr", text:"I've asked at work, nobody's biting.", ago:120 },
+          { from:"tm", text:"Posting it on here then. Someone will turn up.", ago:60 }
+        ] },
+      { id:"g2", activity:"cricket", title:"Sunday tape-ball at Evington Park",
+        venue:"Evington Park, Leicester", court:"Top field", far:3.4, day:nextDow(0), time:"10:00am",
+        cost:0, need:11, host:"rj", players:[p2p("rj"),p2p("cw"),p2p("ar"),p2p("dk"),{id:"x1",name:"Sam",ini:"SM"},{id:"x2",name:"Vik",ini:"VK"},{id:"x3",name:"Joe",ini:"JO"},{id:"x4",name:"Amit",ini:"AM"}],
+        note:"Every Sunday, rain or shine. All ages, all abilities. Free.",
+        booked:true, paid:[], msgs:[
+          { from:"rj", text:"Usual spot, 10am. Bring a jumper.", ago:300 }
+        ] },
+      { id:"g3", activity:"badminton", title:"Tuesday singles ladder",
+        venue:"Aylestone Leisure Centre", court:"Courts 1–2", far:4.1, day:nextDow(2), time:"8:00pm",
+        cost:16, need:4, host:"dk", players:[p2p("dk"),p2p("pr"),p2p("me"),p2p("tm")],
+        note:"Competitive-ish. We rotate singles matches.",
+        booked:true, paid:["dk","pr"], msgs:[] },
+      { id:"g4", activity:"cricket", title:"Thursday nets at Grace Road",
+        venue:"Grace Road nets, Leicester", court:"Net 2", far:2.8, day:nextDow(4), time:"6:30pm",
+        cost:24, need:6, host:"cw", players:[p2p("cw"),p2p("ar"),p2p("rj")],
+        note:"Hardball nets. Bring your own kit if you have it, spares available.",
+        booked:false, paid:[], msgs:[] }
+    ];
+  }
+
+  /* days: 0=Sun..6=Sat -> ms timestamp of next such day */
+  function nextDow(dow) {
+    var d = new Date(); d.setHours(0,0,0,0);
+    var diff = (dow - d.getDay() + 7) % 7;
+    if (diff === 0) diff = 7;
+    d.setDate(d.getDate() + diff);
+    return d.getTime();
+  }
+  var DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  function whenLabel(ts) {
+    var d = new Date(ts), n = new Date(); n.setHours(0,0,0,0);
+    var days = Math.round((d - n) / 86400000);
+    if (days === 0) return "Today";
+    if (days === 1) return "Tomorrow";
+    if (days < 7) return DAYS[d.getDay()];
+    return DAYS[d.getDay()].slice(0,3) + " " + d.getDate();
+  }
+  function agoLabel(mins) {
+    if (mins < 60) return mins + "m";
+    if (mins < 1440) return Math.round(mins/60) + "h";
+    return Math.round(mins/1440) + "d";
+  }
+  function money(n) { return "£" + n.toFixed(2); }
+
+  /* ---------------- state ---------------- */
+  var S = null;
+  function fresh() {
+    return { onboarded:false, user:null, games:seedGames(), chats:{}, notify:true, seenPush:{} };
+  }
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    return fresh();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function reset() { S = fresh(); save(); go("welcome"); }
+
+  function game(id) { for (var i=0;i<S.games.length;i++) if (S.games[i].id===id) return S.games[i]; return null; }
+  function inGame(g) { for (var i=0;i<g.players.length;i++) if (g.players[i].id==="me") return true; return false; }
+  function myGames() { return S.games.filter(inGame); }
+  function share(g) { return g.cost > 0 ? g.cost / Math.max(g.players.length, 1) : 0; }
+  function unread() {
+    var n = 0;
+    for (var k in S.chats) if (S.chats[k].unread) n += S.chats[k].unread;
+    return n;
+  }
+  function relevant(g) {
+    if (!S.user) return true;
+    return S.user.plays.indexOf(g.activity) !== -1;
+  }
+  function feed() {
+    var gs = S.games.filter(relevant);
+    gs.sort(function (a, b) {
+      var an = a.players.length < a.need, bn = b.players.length < b.need;
+      if (an !== bn) return an ? -1 : 1;
+      return a.day - b.day;
+    });
+    return gs;
+  }
+
+  /* ---------------- shell ---------------- */
+  var root = document.getElementById("root");
+  var view = { name:"welcome", arg:null };
+  var stack = [];
+
+  function go(name, arg, replace) {
+    if (!replace && view.name !== name) stack.push({ name:view.name, arg:view.arg });
+    view = { name:name, arg:arg };
+    render();
+  }
+  function back() {
+    var prev = stack.pop();
+    view = prev || { name:"home", arg:null };
+    render();
+  }
+
+  var TABS = [
+    { id:"home",   label:"Near you", icon:'<path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z"/>' },
+    { id:"post",   label:"Post",     icon:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>' },
+    { id:"people", label:"People",   icon:'<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0M17 11a3 3 0 100-6M21 20a6 6 0 00-4-5.6"/>' },
+    { id:"chats",  label:"Chats",    icon:'<path d="M21 15a3 3 0 01-3 3H8l-5 3V6a3 3 0 013-3h12a3 3 0 013 3z"/>' },
+    { id:"you",    label:"You",      icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>' }
+  ];
+  function tabs(active) {
+    var u = unread();
+    return '<nav class="tabs">' + TABS.map(function (t) {
+      var badge = (t.id === "chats" && u) ? '<span class="badge">' + u + "</span>" : "";
+      return '<button data-go="' + t.id + '"' + (t.id === active ? ' aria-current="page"' : "") + ">" + badge +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        t.icon + "</svg>" + t.label + "</button>";
+    }).join("") + "</nav>";
+  }
+  function nav(o) {
+    return '<div class="nav">' +
+      (o.back ? '<button class="back" data-back="1" aria-label="Back">‹</button>' : "") +
+      '<div class="titles"><h1>' + o.title + "</h1>" +
+      (o.sub ? '<div class="sub">' + o.sub + "</div>" : "") + "</div>" +
+      (o.action ? '<button class="act" data-go="' + o.action.go + '">' + o.action.label + "</button>" : "") +
+      "</div>";
+  }
+  function avatar(ini, cls) {
+    var c = COLORS[ini] || "#5C6B62";
+    return '<span class="av ' + (cls || "") + '" style="background:' + c + '">' + ini + "</span>";
+  }
+
+  /* ---------------- screens ---------------- */
+  var V = {};
+
+  V.welcome = function () {
+    return '<main class="center" style="gap:16px; padding:0 28px">' +
+      '<p class="brand">hang<em>out</em></p>' +
+      '<p class="copy" style="max-width:26ch">Somebody near you is one player short. Find them.</p>' +
+      '<div style="height:20px"></div>' +
+      '<button class="btn" data-go="signup">Create an account</button>' +
+      '<button class="btn ghost" data-act="demo-signin">I\'ve already got one</button>' +
+      '<p class="demo-note" style="margin-top:14px">Prototype · Cricket &amp; badminton · 10 miles of Wigston</p>' +
+      "</main>";
+  };
+
+  V.signup = function () {
+    return nav({ title:"Create your account", sub:"Two minutes, then you're in", back:true }) +
+      '<main>' +
+      '<div class="field"><label for="f-name">Your name</label><input id="f-name" type="text" placeholder="Shiv" autocomplete="given-name"></div>' +
+      '<div class="field"><label for="f-email">Email</label><input id="f-email" type="email" placeholder="you@email.com" autocomplete="email"></div>' +
+      '<div class="field"><label for="f-pass">Password</label><input id="f-pass" type="password" placeholder="••••••••"></div>' +
+      '<p class="copy" style="font-size:12px; margin-top:2px">We only ever show your first name and an approximate distance. Never your address.</p>' +
+      '<div style="flex:1"></div>' +
+      '<button class="btn" data-act="signup">Continue</button>' +
+      "</main>";
+  };
+
+  V.pick = function () {
+    var sel = S.draft.plays;
+    function row(id, ico, name, desc) {
+      return '<button class="pick" data-act="toggle-play" data-id="' + id + '" aria-pressed="' + (sel.indexOf(id) !== -1) + '">' +
+        '<span class="ico">' + ico + '</span><span class="t"><b>' + name + "</b><span>" + desc + "</span></span>" +
+        '<span class="tick">✓</span></button>';
+    }
+    var soon = ["Book club","Running","Parent &amp; toddler","Football","Library trips","Chess"];
+    return nav({ title:"What do you play?", sub:"Pick everything you'd turn up for", back:true }) +
+      '<main>' +
+      row("cricket", "🏏", "Cricket", "Hardball, tape ball, nets, park games") +
+      row("badminton", "🏸", "Badminton", "Singles, doubles, any level") +
+      '<h2 class="sec">Coming as we grow</h2>' +
+      '<div class="chips">' + soon.map(function (s) { return '<button class="chip" data-act="soon">' + s + "</button>"; }).join("") + "</div>" +
+      '<div style="flex:1; min-height:12px"></div>' +
+      '<button class="btn" data-act="to-place"' + (sel.length ? "" : " disabled") + ">Continue</button>" +
+      "</main>";
+  };
+
+  V.place = function () {
+    var d = S.draft;
+    return nav({ title:"Where are you?", sub:"So we only show you what's close", back:true }) +
+      '<main>' +
+      '<div class="field"><label for="f-pc">Postcode district</label><input id="f-pc" type="text" value="' + d.pc + '" placeholder="LE18" autocapitalize="characters"></div>' +
+      '<p class="copy" style="font-size:12px">Just the first half — <b>LE18</b>, not the full postcode. It\'s all we need and all we\'ll ever store.</p>' +
+      '<div class="field" style="margin-top:6px"><label for="f-rad">Show me games within</label>' +
+      '<select id="f-rad">' + [3,5,10,15,25].map(function (m) {
+        return '<option value="' + m + '"' + (m === d.radius ? " selected" : "") + ">" + m + " miles</option>";
+      }).join("") + "</select></div>" +
+      '<button class="pick" data-act="toggle-new" aria-pressed="' + d.isNew + '" style="margin-top:8px">' +
+      '<span class="ico">👋</span><span class="t"><b>I\'m new to the area</b><span>Shows a badge so others in your shoes can find you</span></span>' +
+      '<span class="tick">✓</span></button>' +
+      '<div style="flex:1; min-height:12px"></div>' +
+      '<button class="btn" data-act="finish">Find my people</button>' +
+      "</main>";
+  };
+
+  V.home = function () {
+    var gs = feed();
+    var need = gs.filter(function (g) { return g.players.length < g.need; });
+    var set  = gs.filter(function (g) { return g.players.length >= g.need; });
+    var body;
+
+    if (!gs.length) {
+      var pool = S.user.plays.reduce(function (a, p) { return a + (NEARBY[p] || 0); }, 0);
+      body = '<main><div class="empty"><div class="mark">+</div><h3>No games yet</h3>' +
+        "<p>You're early. There are <b>" + pool + " people</b> within " + S.user.radius +
+        " miles who play what you play, and none of them have posted either.</p>" +
+        '<button class="btn" data-go="post">Post the first game</button>' +
+        '<button class="btn ghost" data-go="people" style="max-width:240px">See who\'s nearby</button>' +
+        "</div></main>";
+    } else {
+      body = "<main>" +
+        (need.length ? '<h2 class="sec">Needs a player</h2>' + need.map(card).join("") : "") +
+        (set.length ? '<h2 class="sec">Sorted</h2>' + set.map(card).join("") : "") +
+        '<p class="demo-note" style="margin-top:10px">Showing ' + gs.length + " game" + (gs.length===1?"":"s") +
+        " within " + S.user.radius + " miles of " + S.user.pc + "</p>" +
+        "</main>";
+    }
+    return nav({ title:"Near you", sub:"Within " + S.user.radius + " miles of " + S.user.pc }) + body + tabs("home");
+  };
+
+  function card(g) {
+    var missing = g.need - g.players.length;
+    var mine = inGame(g);
+    var cls = missing > 0 ? "urgent" : "filled";
+    var kind = missing > 0
+      ? missing + " spot" + (missing === 1 ? "" : "s") + " left"
+      : (mine ? "Full · you're playing" : "Full");
+    var pips = g.players.slice(0, 3).map(function (p) {
+      return '<span class="pip" style="background:' + (COLORS[p.ini] || "#5C6B62") + '">' + p.ini + "</span>";
+    }).join("");
+    if (g.players.length > 3) pips += '<span class="pip" style="background:var(--ink-2)">+' + (g.players.length - 3) + "</span>";
+    pips += missing > 0 ? '<span class="pip empty">+</span>' : '<span class="pip empty">✓</span>';
+
+    var btn = mine
+      ? '<button class="btn sm ghost" data-go="game" data-id="' + g.id + '">Open</button>'
+      : (missing > 0
+        ? '<button class="btn sm" data-act="join" data-id="' + g.id + '">I\'m in</button>'
+        : '<button class="btn sm ghost" data-go="game" data-id="' + g.id + '">Open</button>');
+
+    return '<button class="gc ' + cls + '" data-go="game" data-id="' + g.id + '">' +
+      '<div class="top"><span class="kind">' + kind + '</span>' +
+      '<span class="when">' + whenLabel(g.day) + " · " + g.time + "</span></div>" +
+      "<h3>" + g.title + "</h3>" +
+      '<div class="meta">' + cap(g.activity) + "<i></i>" + g.far + " miles<i></i>" +
+      (g.cost ? money(share(g)) + " each" : "Free") + "</div>" +
+      '<div class="foot"><div class="slots">' + pips + "</div>" +
+      '<span class="count">' + g.players.length + "/" + g.need + "</span>" + btn + "</div></button>";
+  }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  V.game = function (id) {
+    var g = game(id);
+    if (!g) return V.home();
+    var mine = inGame(g);
+    var missing = g.need - g.players.length;
+    var host = person(g.host);
+    var per = share(g);
+
+    var pips = g.players.map(function (p) {
+      return '<span class="pip" style="background:' + (COLORS[p.ini] || "#5C6B62") + '">' + p.ini + "</span>";
+    }).join("");
+    if (missing > 0) pips += '<span class="pip empty">+</span>';
+
+    var names = g.players.map(function (p) { return p.id === "me" ? "you" : p.name; });
+    var who = names.length > 3
+      ? names.slice(0,3).join(", ") + " +" + (names.length - 3)
+      : names.slice(0,-1).join(", ") + (names.length > 1 ? " and " : "") + names[names.length-1];
+
+    var payBlock = "";
+    if (g.cost > 0 && g.booked) {
+      payBlock = '<div class="block"><span class="bh">Who\'s paid · ' + money(per) + " each</span>" +
+        g.players.map(function (p) {
+          var paid = g.paid.indexOf(p.id) !== -1;
+          var label = p.id === "me" ? "You" : p.name;
+          var right;
+          if (paid) right = '<b style="color:var(--court)">Paid ✓</b>';
+          else if (p.id === "me") right = '<button class="btn sm green" data-act="pay" data-id="' + g.id + '">Pay ' + money(per) + "</button>";
+          else right = '<span style="color:var(--ink-3)">Waiting</span>';
+          return '<div class="lr">' + avatar(p.ini, "sm") +
+            '<span style="flex:1; margin-left:2px">' + esc(label) + "</span>" + right + "</div>";
+        }).join("") + "</div>";
+    }
+
+    var bookRow = g.cost === 0
+      ? '<div class="link done"><div>Free to play<small>' + g.venue + " · no booking needed</small></div><span class=\"arw\">✓</span></div>"
+      : (g.booked
+        ? '<div class="link done"><div>Booked ✓<small>' + g.venue + " · " + g.court + "</small></div><span class=\"arw\">✓</span></div>"
+        : '<button class="link" data-act="book" data-id="' + g.id + '"><div>Book it at ' + g.venue.split(",")[0] +
+          "<small>Opens their site — we don't take bookings</small></div><span class=\"arw\">↗</span></button>");
+
+    var chatCount = g.msgs.length;
+
+    return nav({ title:g.title.length > 26 ? cap(g.activity) : g.title, sub:whenLabel(g.day) + " · " + g.time, back:true }) +
+      "<main>" +
+      '<div class="block"><span class="bh">' + cap(g.activity) + " · hosted by " + (g.host === "me" ? "you" : host.first) + "</span>" +
+      '<div class="lr" style="font-size:14px"><span>' + g.venue + "</span><b>" + g.far + " mi</b></div>" +
+      (g.note ? '<p class="copy" style="font-size:13px">' + g.note + "</p>" : "") + "</div>" +
+
+      '<div class="block"><span class="bh">Playing</span>' +
+      '<div class="slots" style="padding:2px 0 2px">' + pips + "</div>" +
+      '<div class="lr"><span>' + who + "</span><b>" + g.players.length + "/" + g.need + "</b></div></div>" +
+
+      (g.cost > 0
+        ? '<div class="block"><span class="bh">Cost</span>' +
+          '<div class="lr"><span>' + g.court + " hire</span><b>" + money(g.cost) + "</b></div>" +
+          '<div class="lr"><span>Split ' + g.players.length + " way" + (g.players.length===1?"":"s") + "</span><b>" + money(per) + " each</b></div>" +
+          '<div class="lr total"><span>' + (mine ? "You pay" : "You'd pay") + "</span><b>" +
+          money(g.cost / Math.max(g.players.length + (mine ? 0 : 1), 1)) + "</b></div></div>"
+        : "") +
+
+      bookRow +
+      payBlock +
+
+      '<button class="link" data-go="gchat" data-id="' + g.id + '"><div>Chat<small>' +
+      (chatCount ? chatCount + " message" + (chatCount===1?"":"s") : "No messages yet") + "</small></div><span class=\"arw\">›</span></button>" +
+
+      (mine ? '<button class="btn flat" data-act="leave" data-id="' + g.id + '">Leave this game</button>' : "") +
+      "</main>" +
+
+      '<div class="cta">' +
+      (g.cost > 0 ? '<div class="price">Your share<b>' + money(g.cost / Math.max(g.players.length + (mine ? 0 : 1), 1)) + "</b></div>" : "") +
+      (mine
+        ? '<button class="btn green" disabled>You\'re in ✓</button>'
+        : (missing > 0
+          ? '<button class="btn" data-act="join" data-id="' + g.id + '">I\'m in</button>'
+          : '<button class="btn ghost" disabled>Game is full</button>')) +
+      "</div>";
+  };
+
+  V.gchat = function (id) {
+    var g = game(id);
+    if (!g) return V.home();
+    var msgs = g.msgs.map(function (m) {
+      var mine = m.from === "me";
+      var p = mine ? null : person(m.from);
+      return '<div class="msg' + (mine ? " me" : "") + '">' +
+        (mine ? "" : '<span class="who">' + (p ? p.first : "Someone") + "</span>") +
+        esc(m.text) + '<span class="t">' + agoLabel(m.ago) + " ago</span></div>";
+    }).join("");
+    return nav({ title:"Chat", sub:g.title, back:true }) +
+      '<main id="thread"><div class="thread">' + (msgs || '<p class="demo-note">No messages yet. Say something.</p>') + "</div></main>" +
+      '<form class="composer" data-form="gmsg" data-id="' + g.id + '">' +
+      '<input id="gmsg" type="text" placeholder="Message the group…" autocomplete="off">' +
+      '<button type="submit">Send</button></form>';
+  };
+
+  V.post = function () {
+    var d = S.post;
+    var plays = S.user.plays;
+    return nav({ title:"Post a game", sub:"Takes about 20 seconds" }) +
+      "<main>" +
+      '<div class="chips">' + plays.map(function (a) {
+        return '<button class="chip" data-act="post-act" data-id="' + a + '" aria-pressed="' + (d.activity === a) + '">' +
+          (a === "cricket" ? "🏏 Cricket" : "🏸 Badminton") + "</button>";
+      }).join("") + "</div>" +
+      '<div class="field"><label for="p-title">What is it?</label><input id="p-title" type="text" value="' + esc(d.title) + '" placeholder="Friday doubles"></div>' +
+      '<div class="two">' +
+      '<div class="field"><label for="p-day">Day</label><select id="p-day">' +
+      [0,1,2,3,4,5,6].map(function (i) {
+        var dt = new Date(); dt.setDate(dt.getDate() + i + 1);
+        return '<option value="' + i + '"' + (d.day === i ? " selected" : "") + ">" +
+          (i === 0 ? "Tomorrow" : DAYS[dt.getDay()]) + "</option>";
+      }).join("") + "</select></div>" +
+      '<div class="field"><label for="p-time">Time</label><select id="p-time">' +
+      ["10:00am","12:00pm","2:00pm","5:30pm","6:30pm","7:00pm","8:00pm"].map(function (t) {
+        return '<option' + (d.time === t ? " selected" : "") + ">" + t + "</option>";
+      }).join("") + "</select></div></div>" +
+      '<div class="field"><label for="p-venue">Where</label><select id="p-venue">' +
+      ["Active Wigston, Station Rd","Aylestone Leisure Centre","Evington Park, Leicester","Grace Road nets, Leicester","Braunstone Leisure Centre"].map(function (v) {
+        return '<option' + (d.venue === v ? " selected" : "") + ">" + v + "</option>";
+      }).join("") + "</select></div>" +
+      '<div class="two">' +
+      '<div class="field"><label for="p-need">Players needed</label><input id="p-need" type="number" min="2" max="22" value="' + d.need + '"></div>' +
+      '<div class="field"><label for="p-cost">Court cost (£)</label><input id="p-cost" type="number" min="0" step="1" value="' + d.cost + '"></div></div>' +
+      '<div class="field"><label for="p-note">Anything else?</label><textarea id="p-note" placeholder="Beginners welcome, we\'re not serious">' + esc(d.note) + "</textarea></div>" +
+      '<div class="reach">This goes to <b>' + (NEARBY[d.activity] || 0) + " people</b> within " + S.user.radius +
+      " miles who play " + d.activity + " — including <b>" + Math.round((NEARBY[d.activity] || 0) * 0.29) +
+      "</b> who've never played with anyone on Hangout yet.</div>" +
+      '<button class="btn" data-act="post-it">Post it</button>' +
+      "</main>" + tabs("post");
+  };
+
+  V.people = function () {
+    var filt = S.peopleFilter || "all";
+    var list = PEOPLE.filter(function (p) {
+      if (filt === "all") return p.plays.some(function (a) { return S.user.plays.indexOf(a) !== -1; });
+      return p.plays.indexOf(filt) !== -1;
+    }).sort(function (a, b) { return a.far - b.far; });
+
+    var counts = S.user.plays.map(function (a) { return NEARBY[a] + " play " + a; }).join(" · ");
+
+    return nav({ title:"People near you", sub:counts }) +
+      "<main>" +
+      '<div class="chips"><button class="chip" data-act="pfilter" data-id="all" aria-pressed="' + (filt==="all") + '">Everyone</button>' +
+      S.user.plays.map(function (a) {
+        return '<button class="chip" data-act="pfilter" data-id="' + a + '" aria-pressed="' + (filt===a) + '">' +
+          (a === "cricket" ? "🏏 Cricket" : "🏸 Badminton") + "</button>";
+      }).join("") + "</div>" +
+      '<div style="display:flex; flex-direction:column">' +
+      list.map(function (p) {
+        return '<button class="row" data-go="person" data-id="' + p.id + '">' + avatar(p.ini) +
+          '<span class="t"><b>' + p.name + "</b><span>" + p.blurb + "</span>" +
+          (p.tag ? '<span class="tag' + (p.tagNew ? " new" : "") + '">' + p.tag + "</span>" : "") + "</span>" +
+          '<span class="far">' + p.far + " mi</span></button>";
+      }).join("") + "</div>" +
+      '<p class="demo-note" style="margin-top:8px">Distances are rounded. We never show an address or a map pin.</p>' +
+      "</main>" + tabs("people");
+  };
+
+  V.person = function (id) {
+    var p = person(id);
+    if (!p) return V.people();
+    var theirs = S.games.filter(function (g) {
+      return g.players.some(function (x) { return x.id === p.id; });
+    });
+    return nav({ title:p.name, sub:p.far + " miles away", back:true }) +
+      "<main>" +
+      '<div class="phead">' + avatar(p.ini) + "<b>" + p.name + "</b><span>" + p.far + " miles · " + (p.tag || "Plays locally") + "</span></div>" +
+      '<div class="chips" style="justify-content:center; margin:4px 0 6px">' +
+      p.plays.map(function (a) { return '<span class="chip" aria-pressed="true">' + (a==="cricket"?"🏏 Cricket":"🏸 Badminton") + "</span>"; }).join("") + "</div>" +
+      (theirs.length ? '<h2 class="sec">Games they\'re in</h2>' + theirs.map(function (g) {
+        return '<button class="link" data-go="game" data-id="' + g.id + '"><div>' + g.title +
+          "<small>" + whenLabel(g.day) + " · " + g.time + " · " + g.venue.split(",")[0] + "</small></div><span class=\"arw\">›</span></button>";
+      }).join("") : '<p class="copy">Not in any games right now.</p>') +
+      '<div style="flex:1; min-height:12px"></div>' +
+      '<button class="btn" data-go="chat" data-id="' + p.id + '">Say hello</button>' +
+      "</main>";
+  };
+
+  V.chats = function () {
+    var ids = Object.keys(S.chats).filter(function (k) { return S.chats[k].msgs.length; });
+    if (!ids.length) {
+      return nav({ title:"Chats" }) +
+        '<main><div class="empty"><div class="mark">💬</div><h3>No messages yet</h3>' +
+        "<p>Find someone nearby who plays what you play, and just say hello. That's the whole trick.</p>" +
+        '<button class="btn" data-go="people">See who\'s nearby</button></div></main>' + tabs("chats");
+    }
+    ids.sort(function (a, b) { return S.chats[b].at - S.chats[a].at; });
+    return nav({ title:"Chats" }) + "<main>" +
+      '<div style="display:flex; flex-direction:column">' +
+      ids.map(function (id) {
+        var p = person(id), c = S.chats[id], last = c.msgs[c.msgs.length - 1];
+        return '<button class="row" data-go="chat" data-id="' + id + '">' + avatar(p.ini) +
+          '<span class="t"><b>' + p.name + "</b><span>" +
+          (last.me ? "You: " : "") + esc(last.text) + "</span></span>" +
+          (c.unread ? '<span class="dot"></span>' : '<span class="far">' + p.far + " mi</span>") + "</button>";
+      }).join("") + "</div></main>" + tabs("chats");
+  };
+
+  V.chat = function (id) {
+    var p = person(id);
+    if (!p) return V.chats();
+    if (!S.chats[id]) S.chats[id] = { msgs:[], unread:0, at:Date.now() };
+    S.chats[id].unread = 0; save();
+    var msgs = S.chats[id].msgs.map(function (m) {
+      return '<div class="msg' + (m.me ? " me" : "") + '">' + esc(m.text) + "</div>";
+    }).join("");
+    var starter = S.chats[id].msgs.length ? "" :
+      '<p class="demo-note" style="margin-top:20px">Say hello to ' + p.first + ". They play " +
+      p.plays.join(" and ") + ", " + p.far + " miles from you.</p>";
+    return nav({ title:p.name, sub:p.far + " miles · " + (p.tag || "Plays locally"), back:true }) +
+      '<main id="thread">' + starter + '<div class="thread">' + msgs + "</div></main>" +
+      '<form class="composer" data-form="msg" data-id="' + id + '">' +
+      '<input id="msg" type="text" placeholder="Message ' + p.first + '…" autocomplete="off">' +
+      '<button type="submit">Send</button></form>';
+  };
+
+  V.you = function () {
+    var u = S.user;
+    var mine = myGames();
+    var played = {};
+    mine.forEach(function (g) { g.players.forEach(function (p) { if (p.id !== "me") played[p.id] = 1; }); });
+    var hosted = S.games.filter(function (g) { return g.host === "me"; }).length;
+
+    return nav({ title:"You" }) + "<main>" +
+      '<div class="phead">' + avatar(u.ini) + "<b>" + esc(u.name) + "</b><span>" +
+      u.pc + (u.isNew ? " · new to the area" : "") + "</span></div>" +
+      '<div class="chips" style="justify-content:center; margin:4px 0 8px">' +
+      u.plays.map(function (a) { return '<span class="chip" aria-pressed="true">' + (a==="cricket"?"🏏 Cricket":"🏸 Badminton") + "</span>"; }).join("") + "</div>" +
+
+      '<div class="stats"><div><b>' + mine.length + "</b><span>GAMES</span></div>" +
+      "<div><b>" + Object.keys(played).length + "</b><span>PLAYED WITH</span></div>" +
+      "<div><b>" + hosted + "</b><span>HOSTED</span></div></div>" +
+
+      (mine.length ? '<h2 class="sec">Your games</h2>' + mine.map(function (g) {
+        return '<button class="link" data-go="game" data-id="' + g.id + '"><div>' + g.title +
+          "<small>" + whenLabel(g.day) + " · " + g.time + " · " +
+          (g.cost ? money(share(g)) + " each" : "Free") + "</small></div><span class=\"arw\">›</span></button>";
+      }).join("") : '<p class="copy" style="margin-top:6px">You haven\'t joined a game yet. <b>Near you</b> has ' +
+        feed().filter(function(g){return g.players.length < g.need;}).length + " that need a player.</p>") +
+
+      '<h2 class="sec">Settings</h2>' +
+      '<div class="link" style="cursor:default"><div>Tell me when someone needs a player<small>Within ' + u.radius +
+      " miles · " + u.plays.join(" &amp; ") + '</small></div>' +
+      '<button class="toggle" data-act="notify" aria-pressed="' + S.notify + '" aria-label="Notifications"></button></div>' +
+      '<button class="link" data-act="radius"><div>Search radius<small>Currently ' + u.radius + " miles</small></div><span class=\"arw\">›</span></button>" +
+
+      '<div style="flex:1; min-height:16px"></div>' +
+      '<button class="btn flat" data-act="reset">Reset the prototype</button>' +
+      "</main>" + tabs("you");
+  };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c];
+    });
+  }
+
+  /* ---------------- render ---------------- */
+  function render() {
+    root.innerHTML = V[view.name] ? V[view.name](view.arg) : V.home();
+    var th = document.getElementById("thread");
+    if (th) th.scrollTop = th.scrollHeight;
+    var f = root.querySelector("main input, main select");
+    if (f && (view.name === "signup" || view.name === "place")) { /* leave focus to the user */ }
+  }
+
+  /* ---------------- push + toast + sheet ---------------- */
+  var pushEl = document.getElementById("push");
+  var toastEl = document.getElementById("toast");
+  var sheetEl = document.getElementById("sheet");
+  var pushT, toastT, pushTarget = null;
+
+  function push(icon, title, body, target) {
+    if (!S.notify) return;
+    pushTarget = target;
+    pushEl.innerHTML = '<span class="ic">' + icon + '</span><span class="t"><b>' + esc(title) +
+      "</b><span>" + esc(body) + "</span></span>";
+    pushEl.classList.remove("show");
+    void pushEl.offsetWidth;
+    pushEl.classList.add("show");
+    clearTimeout(pushT);
+    pushT = setTimeout(function () { pushEl.classList.remove("show"); }, 5200);
+  }
+  pushEl.addEventListener("click", function () {
+    pushEl.classList.remove("show");
+    if (pushTarget) go(pushTarget.name, pushTarget.arg);
+  });
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.remove("show");
+    void toastEl.offsetWidth;
+    toastEl.classList.add("show");
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { toastEl.classList.remove("show"); }, 2200);
+  }
+
+  function sheet(title, body, actions) {
+    sheetEl.innerHTML = '<button class="scrim" data-act="close-sheet" aria-label="Close"></button>' +
+      '<div class="panel"><h3>' + title + "</h3><p>" + body + "</p>" +
+      actions.map(function (a) {
+        return '<button class="btn ' + (a.cls || "") + '" data-act="' + a.act + '"' +
+          (a.id ? ' data-id="' + a.id + '"' : "") + ">" + a.label + "</button>";
+      }).join("") + "</div>";
+    sheetEl.classList.add("show");
+  }
+  function closeSheet() { sheetEl.classList.remove("show"); sheetEl.innerHTML = ""; }
+
+  /* ---------------- actions ---------------- */
+  var A = {};
+
+  A["demo-signin"] = function () {
+    S.user = { name:"Shiv", ini:"S", plays:["cricket","badminton"], pc:"LE18", radius:10, isNew:false };
+    S.onboarded = true;
+    S.post = defaultPost(S.user.plays[0]);
+    save();
+    go("home", null, true);
+    stack = [];
+    setTimeout(function () {
+      push("🏸", "Tom needs a 4th", "Friday doubles at Active Wigston · 7:00pm", { name:"game", arg:"g1" });
+    }, 1400);
+  };
+
+  A.signup = function () {
+    var name = (document.getElementById("f-name").value || "").trim();
+    var email = (document.getElementById("f-email").value || "").trim();
+    var pass = document.getElementById("f-pass").value || "";
+    if (!name) { toast("What should we call you?"); document.getElementById("f-name").focus(); return; }
+    if (!email || email.indexOf("@") === -1) { toast("That email doesn't look right"); document.getElementById("f-email").focus(); return; }
+    if (pass.length < 6) { toast("Password needs 6+ characters"); document.getElementById("f-pass").focus(); return; }
+    S.draft = { name:name, plays:[], pc:"LE18", radius:10, isNew:false };
+    save();
+    go("pick");
+  };
+
+  A["toggle-play"] = function (el) {
+    var id = el.getAttribute("data-id");
+    var i = S.draft.plays.indexOf(id);
+    if (i === -1) S.draft.plays.push(id); else S.draft.plays.splice(i, 1);
+    save(); render();
+  };
+  A.soon = function () { toast("Not yet — cricket and badminton first"); };
+  A["to-place"] = function () { go("place"); };
+  A["toggle-new"] = function () { S.draft.isNew = !S.draft.isNew; save(); render(); };
+
+  A.finish = function () {
+    var pc = (document.getElementById("f-pc").value || "LE18").trim().toUpperCase();
+    var rad = parseInt(document.getElementById("f-rad").value, 10) || 10;
+    var d = S.draft;
+    var ini = d.name.trim().split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase();
+    S.user = { name:d.name, ini:ini, plays:d.plays, pc:pc, radius:rad, isNew:d.isNew };
+    S.onboarded = true;
+    S.post = defaultPost(d.plays[0]);
+    delete S.draft;
+    save();
+    stack = [];
+    go("home", null, true);
+    setTimeout(function () {
+      var g = feed().filter(function (x) { return x.players.length < x.need; })[0];
+      if (g) {
+        var h = person(g.host);
+        push("🔔", h.first + " needs a player", g.title + " · " + whenLabel(g.day) + " " + g.time, { name:"game", arg:g.id });
+      }
+    }, 1600);
+  };
+
+  function defaultPost(activity) {
+    return { activity:activity || "badminton", title:"", day:0, time:"7:00pm",
+      venue:"Active Wigston, Station Rd", need:4, cost:20, note:"" };
+  }
+
+  A.join = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    if (!g || inGame(g) || g.players.length >= g.need) return;
+    g.players.push({ id:"me", name:S.user.name, ini:S.user.ini });
+    COLORS[S.user.ini] = "#3C7A5A";
+    g.msgs.push({ from:"me", text:S.user.name + " joined the game 👋", ago:0 });
+    save();
+    render();
+    var full = g.players.length >= g.need;
+    toast(full ? "You're in — that's a full game 🎉" : "You're in");
+    var host = person(g.host);
+    if (host) {
+      setTimeout(function () {
+        var line = full
+          ? "Brilliant, that's us sorted. See you " + whenLabel(g.day).toLowerCase() + " 👊"
+          : "Nice one, welcome aboard 👊";
+        g.msgs.push({ from:g.host, text:line, ago:0 });
+        if (!S.chats[g.host]) S.chats[g.host] = { msgs:[], unread:0, at:Date.now() };
+        save();
+        push("💬", host.first + " · " + g.title.split(" at ")[0], line, { name:"gchat", arg:g.id });
+        if (view.name === "gchat" || view.name === "game") render();
+      }, 2200);
+    }
+  };
+
+  A.leave = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    if (!g) return;
+    g.players = g.players.filter(function (p) { return p.id !== "me"; });
+    g.paid = g.paid.filter(function (x) { return x !== "me"; });
+    save(); render(); toast("You're out — spot's back open");
+  };
+
+  A.book = function (el) {
+    var id = el.getAttribute("data-id");
+    var g = game(id);
+    sheet("Book at " + g.venue.split(",")[0],
+      "In the real app this opens the leisure centre's own booking page in your browser — we never take the booking or the money. Come back and mark it booked so everyone knows it's sorted.",
+      [{ label:"I've booked it", act:"booked", id:id, cls:"green" },
+       { label:"Not yet", act:"close-sheet", cls:"ghost" }]);
+  };
+  A.booked = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    g.booked = true;
+    g.msgs.push({ from:"me", text:"Booked ✅ " + g.court + ", " + money(share(g)) + " each.", ago:0 });
+    save(); closeSheet(); render(); toast("Booked — everyone's been told");
+  };
+  A.pay = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    if (g.paid.indexOf("me") === -1) g.paid.push("me");
+    save(); render(); toast("Paid " + money(share(g)) + " — recorded");
+  };
+  A["close-sheet"] = function () { closeSheet(); };
+
+  function grabPost() {
+    var t = document.getElementById("p-title"); if (!t) return;
+    S.post.title = t.value;
+    S.post.need = parseInt(document.getElementById("p-need").value, 10) || 4;
+    S.post.cost = parseFloat(document.getElementById("p-cost").value) || 0;
+    S.post.venue = document.getElementById("p-venue").value;
+    S.post.time = document.getElementById("p-time").value;
+    S.post.day = parseInt(document.getElementById("p-day").value, 10) || 0;
+    S.post.note = document.getElementById("p-note").value;
+  }
+  A["post-act"] = function (el) {
+    grabPost();
+    S.post.activity = el.getAttribute("data-id");
+    save(); render();
+  };
+
+  A["post-it"] = function () {
+    var d = S.post;
+    var title = (document.getElementById("p-title").value || "").trim();
+    var need = parseInt(document.getElementById("p-need").value, 10) || 4;
+    var cost = parseFloat(document.getElementById("p-cost").value) || 0;
+    var venue = document.getElementById("p-venue").value;
+    var time = document.getElementById("p-time").value;
+    var dayOff = parseInt(document.getElementById("p-day").value, 10) || 0;
+    var note = (document.getElementById("p-note").value || "").trim();
+    if (!title) { toast("Give it a name"); document.getElementById("p-title").focus(); return; }
+
+    var when = new Date(); when.setHours(0,0,0,0);
+    when.setDate(when.getDate() + dayOff + 1);
+
+    var g = {
+      id: "u" + Date.now(),
+      activity: d.activity, title: title, venue: venue, court: "Court 1",
+      far: 1.2, day: when.getTime(), time: time, cost: cost, need: need,
+      host: "me", players: [{ id:"me", name:S.user.name, ini:S.user.ini }],
+      note: note, booked: false, paid: [], msgs: []
+    };
+    COLORS[S.user.ini] = "#3C7A5A";
+    S.games.unshift(g);
+    S.post = defaultPost(d.activity);
+    save();
+    stack = [];
+    go("home", null, true);
+    toast("Posted to " + (NEARBY[d.activity] || 0) + " people nearby");
+
+    /* the loop closes: someone nearby answers */
+    var candidates = PEOPLE.filter(function (p) {
+      return p.plays.indexOf(g.activity) !== -1 && !g.players.some(function (x) { return x.id === p.id; });
+    });
+    if (candidates.length) {
+      var first = candidates[0];
+      setTimeout(function () {
+        g.players.push(p2p(first.id));
+        g.msgs.push({ from:first.id, text:"I'm in! Been looking for a game for weeks.", ago:0 });
+        save();
+        push("🙌", first.first + " is in", g.title + " · " + g.players.length + "/" + g.need + " players", { name:"game", arg:g.id });
+        if (view.name === "home" || view.name === "game" || view.name === "gchat") render();
+      }, 2600);
+    }
+    if (candidates.length > 1) {
+      var second = candidates[1];
+      setTimeout(function () {
+        if (g.players.length >= g.need) return;
+        g.players.push(p2p(second.id));
+        save();
+        push("🙌", second.first + " is in", g.title + " · " + g.players.length + "/" + g.need + " players", { name:"game", arg:g.id });
+        if (view.name === "home" || view.name === "game" || view.name === "gchat") render();
+      }, 7000);
+    }
+  };
+
+  A.pfilter = function (el) { S.peopleFilter = el.getAttribute("data-id"); save(); render(); };
+  A.notify = function () { S.notify = !S.notify; save(); render(); toast(S.notify ? "Pings on" : "Pings off"); };
+  A.radius = function () {
+    sheet("Search radius", "How far are you willing to travel for a game?",
+      [3,5,10,15,25].map(function (m) {
+        return { label:m + " miles" + (S.user.radius === m ? " ✓" : ""), act:"set-radius", id:String(m), cls:S.user.radius === m ? "dark" : "ghost" };
+      }));
+  };
+  A["set-radius"] = function (el) {
+    S.user.radius = parseInt(el.getAttribute("data-id"), 10);
+    save(); closeSheet(); render(); toast("Showing games within " + S.user.radius + " miles");
+  };
+  A.reset = function () {
+    sheet("Reset the prototype?", "Wipes your account, your games and your messages, and puts everything back to how it was.",
+      [{ label:"Reset it", act:"do-reset" }, { label:"Cancel", act:"close-sheet", cls:"ghost" }]);
+  };
+  A["do-reset"] = function () { closeSheet(); stack = []; reset(); };
+
+  /* ---------------- events ---------------- */
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest("[data-act],[data-go],[data-back]");
+    if (!el) return;
+    if (el.hasAttribute("data-back")) { e.preventDefault(); back(); return; }
+    var act = el.getAttribute("data-act");
+    if (act && A[act]) { e.preventDefault(); A[act](el); return; }
+    var dest = el.getAttribute("data-go");
+    if (dest) {
+      e.preventDefault();
+      if (TABS.some(function (t) { return t.id === dest; })) stack = [];
+      go(dest, el.getAttribute("data-id"));
+    }
+  });
+
+  document.addEventListener("submit", function (e) {
+    var f = e.target.closest("[data-form]");
+    if (!f) return;
+    e.preventDefault();
+    var kind = f.getAttribute("data-form");
+    var id = f.getAttribute("data-id");
+    var input = f.querySelector("input");
+    var text = (input.value || "").trim();
+    if (!text) return;
+    input.value = "";
+
+    if (kind === "msg") {
+      if (!S.chats[id]) S.chats[id] = { msgs:[], unread:0, at:Date.now() };
+      S.chats[id].msgs.push({ me:true, text:text });
+      S.chats[id].at = Date.now();
+      save(); render();
+      var p = person(id);
+      var pool = REPLIES[id] || ["👍"];
+      var reply = pool[Math.min(S.chats[id].msgs.filter(function (m) { return !m.me; }).length, pool.length - 1)];
+      setTimeout(function () {
+        S.chats[id].msgs.push({ me:false, text:reply });
+        S.chats[id].at = Date.now();
+        if (view.name !== "chat" || view.arg !== id) S.chats[id].unread = (S.chats[id].unread || 0) + 1;
+        save();
+        if (view.name === "chat" && view.arg === id) render();
+        else push("💬", p.name, reply, { name:"chat", arg:id });
+      }, 1800);
+    }
+
+    if (kind === "gmsg") {
+      var g = game(id);
+      g.msgs.push({ from:"me", text:text, ago:0 });
+      save(); render();
+      var others = g.players.filter(function (x) { return x.id !== "me" && person(x.id); });
+      if (others.length) {
+        var who = others[0];
+        setTimeout(function () {
+          g.msgs.push({ from:who.id, text:(REPLIES[who.id] || ["👍"])[0], ago:0 });
+          save();
+          if (view.name === "gchat" && view.arg === id) render();
+        }, 1900);
+      }
+    }
+  });
+
+  /* live clock */
+  function clock() {
+    var d = new Date(), h = d.getHours(), m = d.getMinutes();
+    document.getElementById("clock").textContent = h + ":" + (m < 10 ? "0" : "") + m;
+  }
+  clock(); setInterval(clock, 20000);
+
+  /* boot */
+  S = load();
+  if (!S.post && S.user) S.post = defaultPost(S.user.plays[0]);
+  view = S.onboarded ? { name:"home", arg:null } : { name:"welcome", arg:null };
+  if (S.user) COLORS[S.user.ini] = "#3C7A5A";
+  render();
+})();
+</script>

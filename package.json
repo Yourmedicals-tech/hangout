@@ -1,0 +1,13 @@
+{
+  "name": "hangout",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Somebody near you is one player short. Find them.",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "db:reset": "./packages/db/reset.sh",
+    "db:test": "node packages/db/test/security.test.js && node packages/db/test/race.test.js",
+    "test": "npm run db:test && npm -w @hangout/shared test"
+  },
+  "devDependencies": { "pg": "^8.13.1" }
+}

@@ -173,6 +173,7 @@
   .gc.filled .pip { border-color:var(--court-wash); }
   .gc.ask .pip { border-color:var(--amber-wash); }
   .pip.empty { background:transparent; border:2px dashed var(--accent); color:var(--accent); font-weight:500; font-size:14px; }
+  .pip.anon { background:var(--line); color:transparent; }
   .gc.filled .pip.empty { border:2px solid var(--court); background:var(--court); color:#fff; }
   .count { font-size:12.5px; font-weight:750; font-variant-numeric:tabular-nums; color:var(--ink-2); margin-left:5px; }
   .gc.urgent .count { color:var(--accent); }
@@ -475,16 +476,16 @@
   /* VENUES — a finite, knowable list. Seeded before a single user exists,
      which is why the app is never truly empty. */
   var VENUES = [
-    { id:"v1",  name:"Active Wigston",           area:"Station Rd, Wigston",      far:1.2, sports:["badminton","squash"],                  price:20, unit:"hour" },
-    { id:"v2",  name:"Wigston Tennis Club",      area:"Blaby Rd",                 far:1.6, sports:["tennis"],                              price:12, unit:"hour" },
-    { id:"v3",  name:"Grace Road nets",          area:"Aylestone, Leicester",     far:2.8, sports:["cricket"],                             price:24, unit:"hour" },
-    { id:"v4",  name:"Evington Park",            area:"Evington, Leicester",      far:3.4, sports:["cricket","running"],                   price:0,  unit:"" },
-    { id:"v5",  name:"Aylestone Leisure Centre", area:"Knighton Lane East",       far:4.1, sports:["badminton","squash","pickleball"],     price:16, unit:"hour" },
-    { id:"v6",  name:"Victoria Park",            area:"Leicester",                far:4.8, sports:["cricket","running","football"],        price:0,  unit:"" },
-    { id:"v7",  name:"Powerleague Leicester",    area:"Meridian Way",             far:5.5, sports:["football"],                            price:55, unit:"hour" },
-    { id:"v8",  name:"Braunstone Leisure Centre",area:"Braunstone",               far:5.6, sports:["badminton","football"],                price:18, unit:"hour" },
-    { id:"v9",  name:"Leicester Leys Centre",    area:"Beaumont Leys",            far:6.2, sports:["badminton","football","pickleball"],   price:22, unit:"hour" },
-    { id:"v10", name:"Padel4All Leicester",      area:"Meridian Business Park",   far:6.9, sports:["padel"],                               price:32, unit:"90 min" }
+    { id:"v1",  name:"Active Wigston",           area:"Station Rd, Wigston",      far:1.2, sports:["badminton","squash"],                  district:"Wigston", price:20, unit:"hour" },
+    { id:"v2",  name:"Wigston Tennis Club",      area:"Blaby Rd",                 far:1.6, sports:["tennis"],                              district:"Wigston", price:12, unit:"hour" },
+    { id:"v3",  name:"Grace Road nets",          area:"Aylestone, Leicester",     far:2.8, sports:["cricket"],                             district:"Aylestone", price:24, unit:"hour" },
+    { id:"v4",  name:"Evington Park",            area:"Evington, Leicester",      far:3.4, sports:["cricket","running"],                   district:"Evington", price:0,  unit:"" },
+    { id:"v5",  name:"Aylestone Leisure Centre", area:"Knighton Lane East",       far:4.1, sports:["badminton","squash","pickleball"],     district:"Aylestone", price:16, unit:"hour" },
+    { id:"v6",  name:"Victoria Park",            area:"Leicester",                far:4.8, sports:["cricket","running","football"],        district:"Leicester city", price:0,  unit:"" },
+    { id:"v7",  name:"Powerleague Leicester",    area:"Meridian Way",             far:5.5, sports:["football"],                            district:"Meridian", price:55, unit:"hour" },
+    { id:"v8",  name:"Braunstone Leisure Centre",area:"Braunstone",               far:5.6, sports:["badminton","football"],                district:"Braunstone", price:18, unit:"hour" },
+    { id:"v9",  name:"Leicester Leys Centre",    area:"Beaumont Leys",            far:6.2, sports:["badminton","football","pickleball"],   district:"Beaumont Leys", price:22, unit:"hour" },
+    { id:"v10", name:"Padel4All Leicester",      area:"Meridian Business Park",   far:6.9, sports:["padel"],                               district:"Meridian", price:32, unit:"90 min" }
   ];
   function venuesFor(id) {
     return VENUES.filter(function (v) { return v.sports.indexOf(id) !== -1; })
@@ -629,6 +630,7 @@
         players:[p2p("tm"), p2p("pr"), p2p("dk")], waitlist:[], out:["cw"],
         level:"any", beginners:true,
         note:"Chris can't make it this week. Beginners welcome — we're really not serious.",
+        approve:false, asks:[],   /* open game: tap in, venue revealed, no friction */
         booked:true, hostPaid:true, paid:["tm"], cancelled:false,
         msgs:[
           { from:"tm", text:"Chris is out this week, so we're a player down 😬" },
@@ -642,6 +644,7 @@
                  { id:"x3", name:"Joe", ini:"JO" }, { id:"x4", name:"Amit", ini:"AM" }],
         waitlist:[], out:[], level:"any", beginners:true,
         note:"Every Sunday, rain or shine. All ages, all abilities. Free.",
+        approve:false, asks:[],
         booked:true, hostPaid:false, paid:[], cancelled:false,
         msgs:[{ from:"rj", text:"Usual spot, 10am. Bring a jumper." }] },
       { id:"g3", sport:"badminton", title:"Tuesday singles ladder", venueId:"v5", court:"Courts 1–2",
@@ -651,12 +654,14 @@
         waitlist:[], out:[],
         level:"Intermediate", beginners:false,
         note:"Six of us, rotating singles. Not four — badminton is whatever you make it. Intermediate and up.",
+        approve:true, asks:[],
         booked:true, hostPaid:true, paid:["dk","pr"], cancelled:false, msgs:[] },
       { id:"g4", sport:"cricket", title:"Thursday hardball nets", venueId:"v3", court:"Net 2",
         day:nextDow(4), time:"6:30pm", cost:24, need:6, teams:false, host:"cw",
         repeats:false, regulars:[], players:[p2p("cw"), p2p("ar"), p2p("rj")],
         waitlist:[], out:[], level:"any", beginners:false,
         note:"Hardball nets. Bring your kit if you've got it — spares available.",
+        approve:true, asks:[],
         booked:false, hostPaid:false, paid:[], cancelled:false, msgs:[] }
     ];
   }
@@ -667,7 +672,7 @@
   function fresh() {
     return { onboarded:false, user:null, games:seedGames(), chats:{}, notify:true,
       demand:JSON.parse(JSON.stringify(DEMAND_SEED)), wanted:[], unlocked:[], post:null,
-      peopleFilter:"all", requests:seedRequests() };
+      peopleFilter:"all", requests:seedRequests(), discoverable:true };
   }
   function load() {
     try { var raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
@@ -701,6 +706,29 @@
       return g.repeats && isRegular(g) && !inGame(g) && g.out.indexOf("me") === -1 && isLive(g.sport) && !g.cancelled;
     });
   }
+  /* ================= THE DISCLOSURE LADDER =================
+     A leisure centre is a public building; its name is not the secret. The
+     danger is the COMBINATION — a named person, pinned to a place, at a time.
+     So before you are in, you get everything you need to DECIDE (sport, when,
+     how far, roughly where, cost, level, spots) and nothing that pins a human
+     to a location: no exact venue, no court, no names, no chat.
+     The HOST decides who crosses that line. Never the admin. */
+  function revealed(g) { return inGame(g); }
+  function asked(g) { return (g.asks || []).indexOf("me") !== -1; }
+  function whereVague(g) {
+    var v = venue(g.venueId);
+    return v.far + " miles away · " + v.district;
+  }
+  /* People get distance BANDS, not decimals. "0.8 miles" read from three
+     angles is a trilateration. "under a mile" is not. */
+  function band(mi) {
+    if (mi < 1) return "under a mile away";
+    if (mi < 3) return "1–3 miles away";
+    if (mi < 5) return "3–5 miles away";
+    if (mi < 10) return "5–10 miles away";
+    return "over 10 miles away";
+  }
+
   function reliability(p) {
     var r = (p && p.record) || { played:0, missed:0 };
     var total = r.played + r.missed;
@@ -891,21 +919,29 @@
       : waiting ? "Full · you're on the waitlist"
       : "Full";
 
+    var open = revealed(g);
     var pips = g.players.slice(0, 3).map(function (p) {
-      return '<span class="pip" style="background:' + (COLORS[p.ini] || "#5C6B62") + '">' + esc(p.ini) + "</span>";
+      return open
+        ? '<span class="pip" style="background:' + (COLORS[p.ini] || "#5C6B62") + '">' + esc(p.ini) + "</span>"
+        : '<span class="pip anon"></span>';
     }).join("");
     if (g.players.length > 3) pips += '<span class="pip" style="background:var(--ink-2)">+' + (g.players.length - 3) + "</span>";
     pips += left > 0 ? '<span class="pip empty">+</span>' : '<span class="pip empty">✓</span>';
 
     var btn;
     if (mine)         btn = '<button class="btn sm ghost" data-go="game" data-id="' + g.id + '">Open</button>';
+    else if (asked(g))btn = '<button class="btn sm ghost" data-go="game" data-id="' + g.id + '">Asked</button>';
+    else if (left > 0 && g.approve)
+                      btn = '<button class="btn sm dark" data-act="ask" data-id="' + g.id + '">Ask to join</button>';
     else if (left > 0)btn = '<button class="btn sm" data-act="join" data-id="' + g.id + '">I\'m in</button>';
     else if (waiting) btn = '<button class="btn sm ghost" data-go="game" data-id="' + g.id + '">Waiting</button>';
     else              btn = '<button class="btn sm ghost" data-act="wait" data-id="' + g.id + '">Waitlist</button>';
 
-    var bits = [s.name, v.far + " mi", g.cost ? money(myShare(g)) + " each" : "Free"];
+    var bits = [s.name, open ? esc(v.name) : v.far + " mi · " + esc(v.district),
+                g.cost ? money(myShare(g)) + " each" : "Free"];
     if (g.repeats) bits.push("Every " + dowOf(g.day).toLowerCase());
     if (g.beginners) bits.push("Beginners ok");
+    if (!open && g.approve) bits.push("Host approves");
 
     return '<button class="gc ' + cls + '" data-go="game" data-id="' + g.id + '">' +
       '<div class="top"><span class="kind">' + kind + "</span>" +
@@ -924,20 +960,27 @@
     var host = person(g.host) || { first:"the host" };
     var per = share(g);
 
+    var open = revealed(g);   /* are you in? then and only then do you see people and place */
+
     var pips = g.players.map(function (p) {
-      return '<span class="pip" style="background:' + (COLORS[p.ini] || "#5C6B62") + '">' + esc(p.ini) + "</span>";
+      return open
+        ? '<span class="pip" style="background:' + (COLORS[p.ini] || "#5C6B62") + '">' + esc(p.ini) + "</span>"
+        : '<span class="pip anon"></span>';
     }).join("") + (left > 0 ? '<span class="pip empty">+</span>' : "");
 
-    /* roster with reliability — what makes a stranger safe to accept */
-    var roster = g.players.map(function (p) {
-      var pp = person(p.id);
-      var r = reliability(pp);
-      var lvl = pp && pp.levels && pp.levels[g.sport] ? '<span class="tag">' + esc(pp.levels[g.sport]) + "</span>" : "";
-      return '<div class="lr">' + avatar(p.ini, "sm") +
-        '<span class="name">' + esc(p.id === "me" ? "You" : p.name) +
-        (g.host === p.id ? " · host" : "") + "</span>" + lvl +
-        '<span class="rep ' + r.cls + '">' + r.txt + "</span></div>";
-    }).join("");
+    /* roster with reliability — but only once you're in. Before that it's a
+       named person pinned to a place and a time, which is the actual danger. */
+    var roster = open
+      ? g.players.map(function (p) {
+          var pp = person(p.id);
+          var r = reliability(pp);
+          var lvl = pp && pp.levels && pp.levels[g.sport] ? '<span class="tag">' + esc(pp.levels[g.sport]) + "</span>" : "";
+          return '<div class="lr">' + avatar(p.ini, "sm") +
+            '<span class="name">' + esc(p.id === "me" ? "You" : p.name) +
+            (g.host === p.id ? " · host" : "") + "</span>" + lvl +
+            '<span class="rep ' + r.cls + '">' + r.txt + "</span></div>";
+        }).join("")
+      : '<p class="note left">' + plural(g.players.length, "person", "people") + " playing. You'll see who they are once you're in.</p>";
 
     /* sides — only if the host asked for them, and they balance at any count */
     var teams = "";
@@ -949,6 +992,24 @@
         '<div class="lr"><span class="name">Bibs</span><b>' + esc(a.join(", ") || "—") + "</b></div>" +
         '<div class="lr"><span class="name">Non-bibs</span><b>' + esc(b.join(", ") || "—") + "</b></div>" +
         '<p class="note left">Sides rebalance as people join and drop out. Uneven is fine — it usually is.</p></div>';
+    }
+
+    /* if you host an approval game, the people asking to join land here.
+       You see what you need to judge them: level, record, how far. Not their address. */
+    var askBlock = "";
+    if (g.host === "me" && (g.asks || []).length) {
+      askBlock = '<div class="block"><span class="bh">Asking to join · ' + plural(g.asks.length, "person", "people") + "</span>" +
+        g.asks.map(function (aid) {
+          var pp = person(aid);
+          var r = reliability(pp);
+          return '<div class="lr">' + avatar(pp.ini, "sm") +
+            '<span class="name">' + esc(pp.name) + "</span>" +
+            (pp.levels && pp.levels[g.sport] ? '<span class="tag">' + esc(pp.levels[g.sport]) + "</span>" : "") +
+            '<span class="rep ' + r.cls + '">' + r.txt + "</span>" +
+            '<button class="btn sm green" data-act="accept" data-id="' + g.id + '" data-v="' + aid + '">Let in</button>' +
+            "</div>";
+        }).join("") +
+        '<p class="note left">You decide, not us. They see the venue and the group the moment you let them in.</p></div>';
     }
 
     var waitBlock = g.waitlist.length
@@ -968,7 +1029,9 @@
     if (g.cost > 0) {
       var owedToHost = g.players.filter(function (p) { return g.paid.indexOf(p.id) === -1; }).length * per;
       costBlock = '<div class="block"><span class="bh">Cost</span>' +
-        '<div class="lr"><span class="name">' + esc(g.court) + " hire</span><b>" + money(g.cost) + "</b></div>" +
+        /* never name the court to someone who is not in the game — that is a location */
+        '<div class="lr"><span class="name">' + (open ? esc(g.court) : (s.teams ? "Pitch" : "Court")) +
+        " hire</span><b>" + money(g.cost) + "</b></div>" +
         '<div class="lr"><span class="name">Split ' + plural(g.players.length, "way") + "</span><b>" + money(per) + " each</b></div>" +
         (g.hostPaid && owedToHost > 0
           ? '<div class="lr total"><span class="name">' + esc(g.host === "me" ? "You are" : host.first + " is") +
@@ -1023,7 +1086,11 @@
       cancelled +
       '<div class="block"><span class="bh">' + s.name + " · hosted by " + esc(g.host === "me" ? "you" : host.first) +
       (g.repeats ? " · repeats weekly" : "") + "</span>" +
-      '<div class="lr" style="font-size:14px"><span class="name">' + esc(v.name) + "</span><b>" + v.far + " mi</b></div>" +
+      (open
+        ? '<div class="lr" style="font-size:14px"><span class="name">' + esc(v.name) + " · " + esc(g.court) +
+          "</span><b>" + v.far + " mi</b></div>"
+        : '<div class="lr" style="font-size:14px"><span class="name">' + esc(whereVague(g)) +
+          '</span><b>🔒</b></div>') +
       '<div class="taglist">' +
       (g.beginners ? '<span class="tag new">Beginners welcome</span>' : "") +
       (g.level !== "any" ? '<span class="tag">' + esc(g.level) + " and up</span>" : "") +
@@ -1039,11 +1106,26 @@
             " can't make it this week." : "Everyone's answered.") + "</p>"
         : "") + "</div>" +
 
-      teams + waitBlock + costBlock + bookRow + weatherRow + payBlock +
+      /* say plainly what's held back, and why — a locked door with no sign is just a wall */
+      (!open
+        ? '<div class="block" style="border-style:dashed">' +
+          '<span class="bh">🔒 Shown once you\'re in</span>' +
+          '<div class="lr"><span class="name">The exact venue and court</span><b>Hidden</b></div>' +
+          '<div class="lr"><span class="name">Who\'s playing, by name</span><b>Hidden</b></div>' +
+          '<div class="lr"><span class="name">The group chat</span><b>Hidden</b></div>' +
+          '<p class="note left">You can see how far it is and roughly where, so you can decide. ' +
+          "We don't put people's names next to a place and a time for strangers to read — that's the bit that matters." +
+          (g.approve ? " " + esc(host.first) + " approves who joins this one." : "") + "</p></div>"
+        : "") +
 
-      '<button class="link" data-go="gchat" data-id="' + g.id + '"><span class="ic">💬</span>' +
-      '<div style="flex:1">Chat<small>' +
-      (g.msgs.length ? plural(g.msgs.length, "message") : "No messages yet") + "</small></div><span class=\"arw\">›</span></button>" +
+      askBlock + teams + waitBlock + costBlock +
+      (open ? bookRow + weatherRow + payBlock : "") +
+
+      (open
+        ? '<button class="link" data-go="gchat" data-id="' + g.id + '"><span class="ic">💬</span>' +
+          '<div style="flex:1">Chat<small>' +
+          (g.msgs.length ? plural(g.msgs.length, "message") : "No messages yet") + "</small></div><span class=\"arw\">›</span></button>"
+        : "") +
 
       '<button class="link" data-go="sport" data-id="' + g.sport + '"><span class="ic">' + s.emoji + "</span>" +
       '<div style="flex:1">New to ' + s.name.toLowerCase() + "?<small>Rules, kit, and " +
@@ -1057,7 +1139,11 @@
       '<div class="cta">' +
       (g.cost > 0 ? '<div class="price">Your share<b>' + money(myShare(g)) + "</b></div>" : "") +
       (mine ? '<button class="btn green" disabled>You\'re in ✓</button>'
-        : left > 0 ? '<button class="btn" data-act="join" data-id="' + g.id + '">I\'m in</button>'
+        : asked(g) ? '<button class="btn amber" disabled>Asked · waiting on ' + esc(host.first) + "</button>"
+        : left > 0
+          ? (g.approve
+              ? '<button class="btn dark" data-act="ask" data-id="' + g.id + '">Ask to join</button>'
+              : '<button class="btn" data-act="join" data-id="' + g.id + '">I\'m in</button>')
         : waiting ? '<button class="btn amber" data-act="unwait" data-id="' + g.id + '">On the waitlist · leave</button>'
         : '<button class="btn dark" data-act="wait" data-id="' + g.id + '">Join the waitlist</button>') +
       "</div>";
@@ -1165,6 +1251,11 @@
       '<button class="pick" data-act="post-repeat" aria-pressed="' + d.repeats + '">' +
       '<span class="ico">🔁</span><span class="t"><b>Repeats every week</b>' +
       "<span>Most real sport is a standing fixture. We'll ask your regulars in or out, every week.</span></span>" +
+      '<span class="tick">✓</span></button>' +
+
+      '<button class="pick" data-act="post-approve" aria-pressed="' + d.approve + '">' +
+      '<span class="ico">🔒</span><span class="t"><b>I approve who joins</b>' +
+      "<span>People ask; you see their level and their record, and decide. The venue and the group only open up once you let them in.</span></span>" +
       '<span class="tick">✓</span></button>' +
 
       '<button class="pick" data-act="post-beginners" aria-pressed="' + d.beginners + '">' +
@@ -1295,7 +1386,7 @@
             return '<button class="row" data-go="person" data-id="' + p.id + '">' + avatar(p.ini) +
               '<span class="t"><b>' + esc(p.name) + "</b><span>" + esc(p.levels[id] || "Any level") +
               " · turned up " + reliability(p).txt + "</span></span>" +
-              '<span class="far">' + p.far + " mi</span></button>";
+              '<span class="far">' + band(p.far).replace(" away", "") + "</span></button>";
           }).join("")
         : "") +
       "</main>";
@@ -1330,9 +1421,9 @@
           '<span class="taglist">' +
           (p.tag ? '<span class="tag' + (p.tagNew ? " new" : "") + '">' + esc(p.tag) + "</span>" : "") +
           '<span class="rep ' + r.cls + '">' + r.txt + "</span></span></span>" +
-          '<span class="far">' + p.far + " mi</span></button>";
+          '<span class="far">' + band(p.far).replace(" away", "") + "</span></button>";
       }).join("") + "</div>" +
-      '<p class="note" style="margin-top:8px">The number by each name is games turned up to. No-shows are the one thing that kills a group — so we make them visible.</p>' +
+      '<p class="note" style="margin-top:8px">Distances are bands, never exact — an exact distance read from three places is an address. The number by each name is games turned up to.</p>' +
       "</main>" + tabs("people");
   };
 
@@ -1341,10 +1432,10 @@
     if (!p) return V.people();
     var r = reliability(p);
     var theirs = S.games.filter(function (g) { return g.players.some(function (x) { return x.id === p.id; }); });
-    return nav({ title:p.name, sub:p.far + " miles away", back:true }) +
+    return nav({ title:p.name, sub:band(p.far), back:true }) +
       "<main>" +
       '<div class="phead">' + avatar(p.ini) + "<b>" + esc(p.name) + "</b>" +
-      "<span>" + p.far + " miles · " + esc(p.tag || "Plays locally") + "</span></div>" +
+      "<span>" + band(p.far) + " · " + esc(p.tag || "Plays locally") + "</span></div>" +
 
       '<div class="stats"><div><b>' + p.record.played + "</b><span>TURNED UP</span></div>" +
       "<div><b>" + p.record.missed + "</b><span>NO-SHOWS</span></div>" +
@@ -1364,7 +1455,7 @@
         ? '<h2 class="sec">Games they\'re in<span class="rule"></span></h2>' + theirs.map(function (g) {
             return '<button class="link" data-go="game" data-id="' + g.id + '"><div style="flex:1">' +
               sp(g.sport).emoji + " " + esc(g.title) + "<small>" + whenLabel(g.day) + " · " + g.time + " · " +
-              esc(venue(g.venueId).name) + "</small></div><span class=\"arw\">›</span></button>";
+              esc(revealed(g) ? venue(g.venueId).name : whereVague(g)) + "</small></div><span class=\"arw\">›</span></button>";
           }).join("")
         : "") +
 
@@ -1386,7 +1477,7 @@
         var p = person(id), c = S.chats[id], last = c.msgs[c.msgs.length - 1];
         return '<button class="row" data-go="chat" data-id="' + id + '">' + avatar(p.ini) +
           '<span class="t"><b>' + esc(p.name) + "</b><span>" + (last.me ? "You: " : "") + esc(last.text) + "</span></span>" +
-          (c.unread ? '<span class="dot"></span>' : '<span class="far">' + p.far + " mi</span>") + "</button>";
+          (c.unread ? '<span class="dot"></span>' : '<span class="far">' + band(p.far).replace(" away", "") + "</span>") + "</button>";
       }).join("") + "</div></main>" + tabs("chats");
   };
 
@@ -1400,8 +1491,8 @@
     }).join("");
     var starter = S.chats[id].msgs.length ? "" :
       '<p class="note" style="margin-top:20px">Say hello to ' + esc(p.first) + ". They play " +
-      p.plays.map(function (a) { return sp(a).name.toLowerCase(); }).join(" and ") + ", " + p.far + " miles from you.</p>";
-    return nav({ title:p.name, sub:p.far + " miles · turned up " + reliability(p).txt, back:true }) +
+      p.plays.map(function (a) { return sp(a).name.toLowerCase(); }).join(" and ") + ", " + band(p.far) + ".</p>";
+    return nav({ title:p.name, sub:band(p.far) + " · turned up " + reliability(p).txt, back:true }) +
       '<main id="thread">' + starter + '<div class="thread">' + msgs + "</div></main>" +
       '<form class="composer" data-form="msg" data-id="' + id + '">' +
       '<input type="text" placeholder="Message ' + esc(p.first) + '…" autocomplete="off"><button type="submit">Send</button></form>';
@@ -1450,6 +1541,9 @@
       "<small>Within " + u.radius + " miles · " +
       (myLiveSports().map(function (a) { return sp(a).name.toLowerCase(); }).join(" and ") || "no live sports") +
       '</small></div><button class="toggle" data-act="notify" aria-pressed="' + S.notify + '" aria-label="Notifications"></button></div>' +
+      '<div class="link" style="cursor:default"><div style="flex:1">Let people find me' +
+      "<small>You appear in People near you, with a distance band — never an exact distance</small></div>" +
+      '<button class="toggle" data-act="discover" aria-pressed="' + S.discoverable + '" aria-label="Discoverable"></button></div>' +
       '<button class="link" data-act="radius"><div style="flex:1">Search radius' +
       "<small>Currently " + u.radius + " miles</small></div><span class=\"arw\">›</span></button>" +
 
@@ -1687,7 +1781,7 @@
     var v = venuesFor(sport)[0] || VENUES[0];
     return { sport:sport, title:"", day:0, time:"7:00pm", venueId:v.id,
       need:defaultNeed(sport), cost:v.price, note:"", repeats:false, beginners:true,
-      level:"any", teams:!!sp(sport).teams };
+      level:"any", teams:!!sp(sport).teams, approve:false };
   }
   A["new-game"] = function () {
     var live = myLiveSports();
@@ -1733,6 +1827,40 @@
       if (view.name === "gchat" || view.name === "game") render();
     }, 2300);
   }
+
+  /* host-approval games: you ask, the host judges, and only then does the
+     venue and the roster open up. The admin is never in this loop. */
+  A.ask = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    if (!g || asked(g) || inGame(g)) return;
+    g.asks = g.asks || [];
+    g.asks.push("me");
+    save(); render();
+    var host = person(g.host);
+    toast("Asked " + host.first + " — they'll see your level and your record");
+
+    setTimeout(function () {
+      if (!asked(g) || spotsLeft(g) <= 0) return;
+      g.asks = g.asks.filter(function (x) { return x !== "me"; });
+      g.players.push({ id:"me", name:S.user.name, ini:S.user.ini });
+      g.msgs.push({ sys:true, text:host.first + " let " + S.user.name + " in" });
+      save();
+      var v = venue(g.venueId);
+      push("✅", host.first + " let you in", v.name + " · " + g.court + " · " + whenLabel(g.day) + " " + g.time,
+        { name:"game", arg:g.id });
+      if (view.name === "game" || view.name === "home") render();
+    }, 3400);
+  };
+
+  A.accept = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    var who = el.getAttribute("data-v");
+    g.asks = g.asks.filter(function (x) { return x !== who; });
+    g.players.push(p2p(who));
+    g.msgs.push({ sys:true, text:person(who).first + " was let in" });
+    save(); render();
+    toast(person(who).first + " is in — they can see the venue now");
+  };
 
   A.regular = function (el) {
     var g = game(el.getAttribute("data-id"));
@@ -1995,7 +2123,7 @@
       cost:v.price, need:defaultNeed(id), teams:!!s.teams,
       host:starters[0].id, repeats:true, regulars:starters.map(function (p) { return p.id; }),
       players:starters.map(function (p) { return p2p(p.id); }), waitlist:[], out:[],
-      level:"any", beginners:true, cancelled:false,
+      level:"any", beginners:true, cancelled:false, approve:false, asks:[],
       note:"The first one since " + s.name.toLowerCase() + " opened here. Everyone's new to it — come along.",
       booked:false, hostPaid:false, paid:[],
       msgs:[{ sys:true, text:s.name + " went live in " + S.user.pc }]
@@ -2025,12 +2153,14 @@
   });
   A["post-sport"] = function (el) {
     grabPost();
-    var keep = { title:S.post.title, note:S.post.note, repeats:S.post.repeats, beginners:S.post.beginners };
+    var keep = { title:S.post.title, note:S.post.note, repeats:S.post.repeats,
+      beginners:S.post.beginners, approve:S.post.approve };
     S.post = defaultPost(el.getAttribute("data-id"));
     S.post.title = keep.title; S.post.note = keep.note;
-    S.post.repeats = keep.repeats; S.post.beginners = keep.beginners;
+    S.post.repeats = keep.repeats; S.post.beginners = keep.beginners; S.post.approve = keep.approve;
     save(); render();
   };
+  A["post-approve"]   = function ()   { grabPost(); S.post.approve = !S.post.approve; save(); render(); };
   A["post-need"]      = function (el) { grabPost(); S.post.need = parseInt(el.getAttribute("data-v"), 10); save(); render(); };
   A["post-teams"]     = function ()   { grabPost(); S.post.teams = !S.post.teams; save(); render(); };
   A["post-level"]     = function (el) { grabPost(); S.post.level = el.getAttribute("data-v"); save(); render(); };
@@ -2054,6 +2184,7 @@
       host:"me", repeats:d.repeats, regulars:d.repeats ? ["me"] : [],
       players:[{ id:"me", name:S.user.name, ini:S.user.ini }], waitlist:[], out:[],
       level:d.level, beginners:d.beginners, note:d.note.trim(),
+      approve:!!d.approve, asks:[],
       booked:false, hostPaid:false, paid:[], cancelled:false, msgs:[]
     };
     S.games.unshift(g);
@@ -2093,6 +2224,11 @@
   /* --- settings --- */
   A.pfilter = function (el) { S.peopleFilter = el.getAttribute("data-id"); save(); render(); };
   A.notify = function () { S.notify = !S.notify; save(); render(); toast(S.notify ? "Pings on" : "Pings off"); };
+  A.discover = function () {
+    S.discoverable = !S.discoverable;
+    save(); render();
+    toast(S.discoverable ? "You are findable in People near you" : "Hidden — you can still join and post games");
+  };
   A.radius = function () {
     sheet("<h3>Search radius</h3>" +
       "<p>How far would you genuinely travel for a game? Be honest — a badminton court 25 miles away is a game you won't go to.</p>" +
@@ -2204,6 +2340,7 @@
   if (!S.wanted)   S.wanted = [];
   if (!S.unlocked) S.unlocked = [];
   if (!S.requests) S.requests = seedRequests();
+  if (S.discoverable === undefined) S.discoverable = true;
   if (!S.chats)    S.chats = {};
   if (!S.peopleFilter) S.peopleFilter = "all";
   if (S.user) {

@@ -1,4 +1,4 @@
-<title>Hangout — walkthrough prototype</title>
+<title>Hangout — prototype</title>
 
 <style>
   :root {
@@ -7,6 +7,7 @@
     --line:#C9CEC5; --line-soft:#DEE2DA;
     --accent:#E8452F; --accent-ink:#FFFFFF; --accent-wash:#FCE9E5;
     --court:#0B6E4F; --court-wash:#DDEDE5;
+    --amber:#B26B00; --amber-wash:#F8EEDC;
     --bezel:#12180F;
     --shadow:0 1px 2px rgba(15,21,18,.06), 0 24px 60px -20px rgba(15,21,18,.35);
   }
@@ -16,7 +17,8 @@
       --paper:#0A0E0C; --card:#171F1A; --card-2:#1E2721;
       --line:#2C382F; --line-soft:#232D26;
       --accent:#FF6248; --accent-ink:#1A0B07; --accent-wash:#3A1A13;
-      --court:#35BE8B; --court-wash:#16302650;
+      --court:#35BE8B; --court-wash:#1B3529;
+      --amber:#E0A44A; --amber-wash:#3A2E15;
       --bezel:#000000;
       --shadow:0 1px 2px rgba(0,0,0,.5), 0 24px 60px -20px rgba(0,0,0,.8);
     }
@@ -26,7 +28,8 @@
     --paper:#0A0E0C; --card:#171F1A; --card-2:#1E2721;
     --line:#2C382F; --line-soft:#232D26;
     --accent:#FF6248; --accent-ink:#1A0B07; --accent-wash:#3A1A13;
-    --court:#35BE8B; --court-wash:#16302650;
+    --court:#35BE8B; --court-wash:#1B3529;
+    --amber:#E0A44A; --amber-wash:#3A2E15;
     --bezel:#000000;
     --shadow:0 1px 2px rgba(0,0,0,.5), 0 24px 60px -20px rgba(0,0,0,.8);
   }
@@ -36,16 +39,17 @@
     --line:#C9CEC5; --line-soft:#DEE2DA;
     --accent:#E8452F; --accent-ink:#FFFFFF; --accent-wash:#FCE9E5;
     --court:#0B6E4F; --court-wash:#DDEDE5;
+    --amber:#B26B00; --amber-wash:#F8EEDC;
     --bezel:#12180F;
     --shadow:0 1px 2px rgba(15,21,18,.06), 0 24px 60px -20px rgba(15,21,18,.35);
   }
 
-  * { box-sizing: border-box; }
+  * { box-sizing:border-box; }
   body {
     margin:0; min-height:100vh; background:var(--paper); color:var(--ink);
     font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing:antialiased; line-height:1.5;
-    display:flex; align-items:center; justify-content:center; padding:0;
+    display:flex; align-items:center; justify-content:center;
   }
   #device {
     width:100%; max-width:390px; height:100vh; max-height:844px;
@@ -54,312 +58,292 @@
   }
   @media (min-width:640px) and (min-height:700px) {
     body { padding:32px; }
-    #device {
-      border-radius:44px; box-shadow:var(--shadow);
-      outline:10px solid var(--bezel); outline-offset:0;
-      height:844px;
-    }
+    #device { border-radius:44px; box-shadow:var(--shadow); outline:10px solid var(--bezel); height:844px; }
   }
 
-  /* status bar */
-  .status {
-    display:flex; justify-content:space-between; align-items:center;
-    padding:14px 24px 2px; font-size:12px; font-weight:650;
-    font-variant-numeric:tabular-nums; flex:none;
-  }
+  .status { display:flex; justify-content:space-between; align-items:center;
+    padding:14px 24px 2px; font-size:12px; font-weight:650; font-variant-numeric:tabular-nums; flex:none; }
   .status .r { display:flex; gap:4px; align-items:center; }
   .status .r i { width:3px; height:3px; border-radius:50%; background:currentColor; display:block; }
   .status .b { width:20px; height:10px; border:1.3px solid currentColor; border-radius:3px; position:relative; }
   .status .b::after { content:""; position:absolute; inset:1.6px; right:6px; background:currentColor; border-radius:1px; }
 
-  /* nav */
-  .nav {
-    flex:none; padding:6px 20px 10px;
-    display:flex; align-items:center; gap:12px; min-height:48px;
-  }
+  .nav { flex:none; padding:6px 20px 10px; display:flex; align-items:center; gap:12px; min-height:48px; }
   .nav .titles { min-width:0; flex:1; }
-  .nav h1 { margin:0; font-size:22px; font-weight:750; letter-spacing:-.025em; line-height:1.2; }
-  .nav .sub { font-size:11.5px; color:var(--ink-3); font-weight:550; }
-  .nav .back {
-    font-size:26px; line-height:1; color:var(--ink-2); background:none; border:0;
-    padding:0 2px 4px 0; cursor:pointer; font-family:inherit; flex:none;
-  }
-  .nav .act {
-    background:none; border:0; font:inherit; font-size:14px; font-weight:650;
-    color:var(--accent); cursor:pointer; flex:none; padding:0;
-  }
+  .nav h1 { margin:0; font-size:22px; font-weight:750; letter-spacing:-.025em; line-height:1.2;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nav .sub { font-size:11.5px; color:var(--ink-3); font-weight:550;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nav .back { font-size:26px; line-height:1; color:var(--ink-2); background:none; border:0;
+    padding:0 2px 4px 0; cursor:pointer; font-family:inherit; flex:none; }
+  .nav .act { background:none; border:0; font:inherit; font-size:14px; font-weight:700;
+    color:var(--accent); cursor:pointer; flex:none; padding:0; white-space:nowrap; }
 
-  /* scroll body */
-  main {
-    flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
-    padding:2px 20px 20px; display:flex; flex-direction:column; gap:12px;
-  }
+  main { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:2px 20px 20px; display:flex; flex-direction:column; gap:12px; }
   main.center { justify-content:center; text-align:center; align-items:center; }
   main::-webkit-scrollbar { width:0; }
 
-  h2.sec {
-    font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-    color:var(--ink-3); margin:8px 0 -4px;
-  }
+  h2.sec { font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-3); margin:8px 0 -4px; display:flex; align-items:center; gap:8px; }
+  h2.sec .rule { flex:1; height:1px; background:var(--line-soft); }
   p.copy { margin:0; font-size:14px; color:var(--ink-2); line-height:1.55; }
+  p.copy b { color:var(--ink); }
 
-  /* buttons */
-  .btn {
-    border:0; border-radius:999px; padding:14px 22px;
-    font:inherit; font-size:15px; font-weight:700; letter-spacing:-.01em;
-    background:var(--accent); color:var(--accent-ink); cursor:pointer;
-    transition:transform .12s ease, opacity .15s ease; width:100%;
-  }
+  .btn { border:0; border-radius:999px; padding:14px 22px; font:inherit; font-size:15px; font-weight:700;
+    letter-spacing:-.01em; background:var(--accent); color:var(--accent-ink); cursor:pointer;
+    transition:transform .12s ease, opacity .15s ease; width:100%; }
   .btn:active { transform:scale(.97); }
   .btn:focus-visible { outline:2px solid var(--ink); outline-offset:2px; }
-  .btn.sm { padding:9px 16px; font-size:12.5px; width:auto; }
+  .btn.sm { padding:9px 15px; font-size:12.5px; width:auto; }
   .btn.ghost { background:transparent; color:var(--ink); border:1px solid var(--line); }
   .btn.dark { background:var(--ink); color:var(--paper); }
   .btn.green { background:var(--court); color:#fff; }
+  .btn.amber { background:var(--amber); color:#fff; }
   .btn.flat { background:transparent; color:var(--ink-3); font-weight:600; font-size:13px; padding:10px; }
   .btn[disabled] { opacity:.4; cursor:default; }
 
-  /* inputs */
   .field { display:flex; flex-direction:column; gap:5px; }
-  .field label {
-    font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3);
-  }
+  .field label { font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); }
   .field input, .field select, .field textarea {
     font:inherit; font-size:16px; color:var(--ink); background:var(--card);
     border:1px solid var(--line); border-radius:12px; padding:13px 14px; width:100%;
-    -webkit-appearance:none; appearance:none;
-  }
-  .field textarea { resize:none; min-height:64px; font-size:15px; }
-  .field input:focus, .field select:focus, .field textarea:focus {
-    outline:none; border-color:var(--ink); }
-  .field select {
-    background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);
+    -webkit-appearance:none; appearance:none; }
+  .field textarea { resize:none; min-height:60px; font-size:15px; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--ink); }
+  .field input[disabled] { color:var(--ink-3); background:var(--card-2); }
+  .field select { background-image:linear-gradient(45deg,transparent 50%,var(--ink-3) 50%),linear-gradient(135deg,var(--ink-3) 50%,transparent 50%);
     background-position:calc(100% - 18px) 21px, calc(100% - 13px) 21px;
-    background-size:5px 5px, 5px 5px; background-repeat:no-repeat;
-  }
+    background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
+  .field .hint { font-size:11.5px; color:var(--ink-3); line-height:1.45; }
+  .field .hint b { color:var(--ink-2); }
   .two { display:flex; gap:10px; } .two > * { flex:1; min-width:0; }
 
-  /* interest picker */
-  .pick {
-    display:flex; align-items:center; gap:13px; width:100%; text-align:left;
-    border:1.5px solid var(--line); border-radius:16px; padding:15px;
+  .pick { display:flex; align-items:center; gap:13px; width:100%; text-align:left;
+    border:1.5px solid var(--line); border-radius:16px; padding:14px;
     background:var(--card); color:var(--ink); font:inherit; cursor:pointer;
-    transition:border-color .15s ease, background .15s ease;
-  }
+    transition:border-color .15s ease, background .15s ease; }
   .pick[aria-pressed="true"] { border-color:var(--ink); background:var(--card-2); }
-  .pick .ico { font-size:26px; line-height:1; flex:none; }
+  .pick .ico { font-size:25px; line-height:1; flex:none; }
+  .pick .t { min-width:0; flex:1; }
   .pick .t b { display:block; font-size:15.5px; font-weight:680; letter-spacing:-.01em; }
-  .pick .t span { font-size:12px; color:var(--ink-2); }
-  .pick .tick {
-    margin-left:auto; width:22px; height:22px; border-radius:50%; flex:none;
-    border:1.5px solid var(--line); display:grid; place-items:center;
-    font-size:12px; color:transparent;
-  }
+  .pick .t span { font-size:12px; color:var(--ink-2); display:block; line-height:1.4; }
+  .pick .tick { margin-left:auto; width:22px; height:22px; border-radius:50%; flex:none;
+    border:1.5px solid var(--line); display:grid; place-items:center; font-size:12px; color:transparent; }
   .pick[aria-pressed="true"] .tick { background:var(--ink); border-color:var(--ink); color:var(--paper); }
-  .pick[disabled] { opacity:.4; cursor:default; }
 
   .chips { display:flex; flex-wrap:wrap; gap:7px; }
-  .chip {
-    font:inherit; font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:999px;
-    border:1px solid var(--line); color:var(--ink-2); background:var(--card); cursor:pointer;
-  }
+  .chip { font:inherit; font-size:12.5px; font-weight:600; padding:8px 13px; border-radius:999px;
+    border:1px solid var(--line); color:var(--ink-2); background:var(--card); cursor:pointer; }
   .chip[aria-pressed="true"] { background:var(--ink); border-color:var(--ink); color:var(--paper); }
 
-  /* game card */
-  .gc {
-    border:1px solid var(--line-soft); border-radius:18px; background:var(--card);
-    padding:13px 14px; display:flex; flex-direction:column; gap:10px;
+  .gc { border:1px solid var(--line-soft); border-radius:18px; background:var(--card);
+    padding:13px 14px; display:flex; flex-direction:column; gap:9px;
     cursor:pointer; text-align:left; font:inherit; color:var(--ink); width:100%;
-    transition:transform .12s ease;
-  }
+    transition:transform .12s ease; }
   .gc:active { transform:scale(.985); }
   .gc.urgent { border-color:var(--accent); background:var(--accent-wash); }
   .gc.filled { border-color:var(--court); background:var(--court-wash); }
+  .gc.ask { border-color:var(--amber); background:var(--amber-wash); cursor:default; }
   .gc .top { display:flex; align-items:center; gap:8px; }
   .gc .kind { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); }
   .gc.urgent .kind { color:var(--accent); }
   .gc.filled .kind { color:var(--court); }
+  .gc.ask .kind { color:var(--amber); }
   .gc .when { margin-left:auto; font-size:11.5px; color:var(--ink-3); font-weight:650; font-variant-numeric:tabular-nums; }
-  .gc h3 { margin:0; font-size:17px; font-weight:700; letter-spacing:-.02em; line-height:1.25; }
+  .gc h3 { margin:0; font-size:16.5px; font-weight:700; letter-spacing:-.02em; line-height:1.25; }
   .gc .meta { font-size:12.5px; color:var(--ink-2); display:flex; gap:7px; align-items:center; flex-wrap:wrap; }
   .gc .meta i { width:3px; height:3px; border-radius:50%; background:var(--ink-3); display:block; flex:none; }
-  .gc .foot { display:flex; align-items:center; gap:10px; }
+  .gc .foot { display:flex; align-items:center; gap:8px; }
+  .gc .foot .btn { margin-left:auto; }
+  .gc .pair { display:flex; gap:7px; width:100%; }
+  .gc .pair .btn { flex:1; margin-left:0; }
+
+  .rep { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700;
+    padding:2px 6px; border-radius:5px; background:var(--court-wash); color:var(--court); white-space:nowrap; }
+  .rep.low { background:var(--amber-wash); color:var(--amber); }
+  .rep.none { background:var(--card-2); color:var(--ink-3); }
 
   .slots { display:flex; align-items:center; }
   .slots > * + * { margin-left:-7px; }
-  .pip {
-    width:28px; height:28px; border-radius:50%; border:2px solid var(--card);
+  .pip { width:28px; height:28px; border-radius:50%; border:2px solid var(--card);
     display:grid; place-items:center; font-size:10.5px; font-weight:700; color:#fff;
-    background:var(--ink-2); flex:none;
-  }
+    background:var(--ink-2); flex:none; }
   .gc.urgent .pip { border-color:var(--accent-wash); }
   .gc.filled .pip { border-color:var(--court-wash); }
+  .gc.ask .pip { border-color:var(--amber-wash); }
   .pip.empty { background:transparent; border:2px dashed var(--accent); color:var(--accent); font-weight:500; font-size:14px; }
   .gc.filled .pip.empty { border:2px solid var(--court); background:var(--court); color:#fff; }
   .count { font-size:12.5px; font-weight:750; font-variant-numeric:tabular-nums; color:var(--ink-2); margin-left:5px; }
   .gc.urgent .count { color:var(--accent); }
   .gc.filled .count { color:var(--court); }
-  .gc .foot .btn { margin-left:auto; }
 
-  @keyframes pop { 0%{transform:scale(.3);opacity:0} 65%{transform:scale(1.18)} 100%{transform:scale(1);opacity:1} }
-  .pop { animation:pop .45s cubic-bezier(.3,1.5,.5,1) both; }
-  @keyframes slidein { from{transform:translateY(-120%);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes slidein { from{transform:translateY(-130%);opacity:0} to{transform:translateY(0);opacity:1} }
   @keyframes fadeup { from{transform:translateY(8px);opacity:0} to{transform:translateY(0);opacity:1} }
   main > * { animation:fadeup .3s ease both; }
   @media (prefers-reduced-motion:reduce) { *,main>* { animation:none!important; transition:none!important; } }
 
-  /* rows */
-  .row {
-    display:flex; align-items:center; gap:12px; width:100%; text-align:left;
-    padding:12px 0; border-bottom:1px solid var(--line-soft);
-    background:none; border-left:0; border-right:0; border-top:0; font:inherit; color:var(--ink); cursor:pointer;
-  }
+  .row { display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    padding:11px 0; border:0; border-bottom:1px solid var(--line-soft);
+    background:none; font:inherit; color:var(--ink); cursor:pointer; }
   .row:last-child { border-bottom:0; }
   .row .t { flex:1; min-width:0; }
-  .row .t b { display:block; font-size:15px; font-weight:680; letter-spacing:-.01em; }
-  .row .t span { display:block; font-size:12px; color:var(--ink-2); line-height:1.45; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row .t b { display:block; font-size:14.5px; font-weight:680; letter-spacing:-.01em; }
+  .row .t span { display:block; font-size:12px; color:var(--ink-2); line-height:1.45;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .row .far { font-size:11.5px; color:var(--ink-3); font-weight:650; font-variant-numeric:tabular-nums; flex:none; }
-  .av {
-    width:42px; height:42px; border-radius:50%; flex:none; display:grid; place-items:center;
-    color:#fff; font-weight:700; font-size:14px;
-  }
+  .av { width:42px; height:42px; border-radius:50%; flex:none; display:grid; place-items:center;
+    color:#fff; font-weight:700; font-size:14px; }
   .av.sm { width:30px; height:30px; font-size:11px; }
   .tag { display:inline-block; font-size:10px; font-weight:650; padding:2px 7px; border-radius:5px;
-    background:var(--card-2); color:var(--ink-2); margin-top:4px; }
+    background:var(--card-2); color:var(--ink-2); white-space:nowrap; }
   .tag.new { background:var(--accent-wash); color:var(--accent); }
+  .taglist { display:flex; gap:5px; flex-wrap:wrap; margin-top:4px; }
   .dot { width:8px; height:8px; border-radius:50%; background:var(--accent); flex:none; }
 
-  /* block */
-  .block {
-    border:1px solid var(--line-soft); border-radius:16px; padding:13px 14px;
-    display:flex; flex-direction:column; gap:9px; background:var(--card);
-  }
+  .block { border:1px solid var(--line-soft); border-radius:16px; padding:13px 14px;
+    display:flex; flex-direction:column; gap:9px; background:var(--card); }
   .block .bh { font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); }
-  .lr { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+  .lr { display:flex; justify-content:space-between; align-items:center; gap:8px;
+    font-size:13.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
   .lr b { color:var(--ink); font-weight:700; }
+  .lr .name { flex:1; min-width:0; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .lr.total { border-top:1px solid var(--line-soft); padding-top:9px; font-size:15px; }
 
-  .link {
-    display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; text-align:left;
+  .link { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; text-align:left;
     font:inherit; font-size:14px; font-weight:650; color:var(--ink); cursor:pointer;
-    border:1px solid var(--line); border-radius:14px; padding:12px 14px; background:var(--card);
-  }
+    border:1px solid var(--line); border-radius:14px; padding:12px 14px; background:var(--card); }
   .link small { display:block; font-size:11.5px; font-weight:500; color:var(--ink-3); margin-top:1px; }
   .link .arw { color:var(--ink-3); font-size:15px; flex:none; }
+  .link .ic { font-size:19px; flex:none; }
   .link.done { border-color:var(--court); background:var(--court-wash); }
   .link.done .arw { color:var(--court); }
+  .link.warn { border-color:var(--amber); background:var(--amber-wash); }
 
   .reach { background:var(--ink); color:var(--paper); border-radius:14px; padding:13px 15px; font-size:13px; line-height:1.5; }
   .reach b { font-weight:750; font-variant-numeric:tabular-nums; }
+  .reach .btn { margin-top:11px; }
 
-  /* empty */
-  .empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:11px; text-align:center; flex:1; padding:20px 0; }
-  .empty .mark { width:62px; height:62px; border-radius:50%; border:2px dashed var(--accent); color:var(--accent);
-    display:grid; place-items:center; font-size:26px; font-weight:300; }
+  .stile { display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    border:1px solid var(--line-soft); border-radius:16px; padding:12px 13px;
+    background:var(--card); color:var(--ink); font:inherit; cursor:pointer; }
+  .stile .ico { font-size:26px; flex:none; }
+  .stile .t { flex:1; min-width:0; }
+  .stile .t b { display:block; font-size:15px; font-weight:700; letter-spacing:-.015em; }
+  .stile .t span { display:block; font-size:11.5px; color:var(--ink-2); }
+  .stile .arw { color:var(--ink-3); flex:none; }
+  .stile.locked { border-style:dashed; cursor:default; flex-direction:column; align-items:stretch; gap:9px; }
+  .stile.locked .ico { filter:grayscale(1); opacity:.6; }
+  .stile .head { display:flex; align-items:center; gap:12px; }
+
+  .meter { display:block; height:5px; border-radius:999px; background:var(--line-soft); overflow:hidden; margin-top:6px; }
+  .meter i { display:block; height:100%; background:var(--accent); border-radius:999px;
+    transition:width .6s cubic-bezier(.3,1,.4,1); }
+  .meter.close i { background:var(--amber); }
+
+  .empty { display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:11px; text-align:center; flex:1; padding:24px 0; }
+  .empty .mark { width:62px; height:62px; border-radius:50%; border:2px dashed var(--accent);
+    color:var(--accent); display:grid; place-items:center; font-size:26px; font-weight:300; }
   .empty h3 { margin:6px 0 0; font-size:19px; font-weight:750; letter-spacing:-.02em; }
-  .empty p { margin:0; font-size:13.5px; color:var(--ink-2); line-height:1.55; max-width:30ch; }
-  .empty .btn { margin-top:8px; max-width:240px; }
+  .empty p { margin:0; font-size:13.5px; color:var(--ink-2); line-height:1.55; max-width:31ch; }
+  .empty .btn { margin-top:8px; max-width:250px; }
 
-  /* chat */
   .thread { display:flex; flex-direction:column; gap:9px; padding-top:6px; }
   .msg { max-width:80%; padding:10px 13px; border-radius:18px; font-size:14px; line-height:1.45;
     background:var(--card-2); color:var(--ink); border-bottom-left-radius:5px; align-self:flex-start;
     animation:fadeup .25s ease both; }
   .msg.me { align-self:flex-end; background:var(--ink); color:var(--paper);
     border-bottom-left-radius:18px; border-bottom-right-radius:5px; }
-  .msg .t { display:block; font-size:10px; opacity:.55; margin-top:4px; font-variant-numeric:tabular-nums; }
+  .msg.sys { align-self:center; background:transparent; color:var(--ink-3); font-size:11.5px;
+    text-align:center; max-width:90%; padding:2px; font-weight:600; }
   .msg .who { display:block; font-size:10.5px; font-weight:700; opacity:.6; margin-bottom:2px; }
-  .composer { flex:none; display:flex; gap:8px; align-items:center; padding:10px 20px 18px; border-top:1px solid var(--line-soft); }
-  .composer input {
-    flex:1; font:inherit; font-size:16px; color:var(--ink); background:var(--card-2);
-    border:1px solid transparent; border-radius:999px; padding:11px 16px; -webkit-appearance:none;
-  }
+  .composer { flex:none; display:flex; gap:8px; align-items:center; padding:10px 20px 18px;
+    border-top:1px solid var(--line-soft); }
+  .composer input { flex:1; font:inherit; font-size:16px; color:var(--ink); background:var(--card-2);
+    border:1px solid transparent; border-radius:999px; padding:11px 16px; -webkit-appearance:none; }
   .composer input:focus { outline:none; border-color:var(--line); }
-  .composer button { background:none; border:0; font:inherit; font-size:14px; font-weight:750; color:var(--accent); cursor:pointer; padding:6px; flex:none; }
+  .composer button { background:none; border:0; font:inherit; font-size:14px; font-weight:750;
+    color:var(--accent); cursor:pointer; padding:6px; flex:none; }
 
-  /* profile head */
-  .phead { display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px 0 2px; }
-  .phead .av { width:70px; height:70px; font-size:24px; }
+  .phead { display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 0 2px; }
+  .phead .av { width:68px; height:68px; font-size:23px; }
   .phead b { font-size:20px; font-weight:750; letter-spacing:-.02em; }
   .phead span { font-size:12.5px; color:var(--ink-3); }
   .stats { display:flex; border:1px solid var(--line-soft); border-radius:14px; overflow:hidden; }
-  .stats div { flex:1; text-align:center; padding:11px 4px; border-right:1px solid var(--line-soft); }
+  .stats div { flex:1; text-align:center; padding:10px 3px; border-right:1px solid var(--line-soft); min-width:0; }
   .stats div:last-child { border-right:0; }
-  .stats b { display:block; font-size:19px; font-weight:750; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
-  .stats span { font-size:9.5px; color:var(--ink-3); font-weight:700; letter-spacing:.05em; }
+  .stats b { display:block; font-size:17px; font-weight:750; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+  .stats span { font-size:8.5px; color:var(--ink-3); font-weight:700; letter-spacing:.03em; }
 
-  .toggle { width:44px; height:26px; border-radius:999px; background:var(--line); position:relative; flex:none;
-    border:0; cursor:pointer; transition:background .18s ease; }
+  .toggle { width:44px; height:26px; border-radius:999px; background:var(--line); position:relative;
+    flex:none; border:0; cursor:pointer; transition:background .18s ease; }
   .toggle::after { content:""; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%;
     background:#fff; transition:transform .18s ease; box-shadow:0 1px 3px rgba(0,0,0,.25); }
   .toggle[aria-pressed="true"] { background:var(--court); }
   .toggle[aria-pressed="true"]::after { transform:translateX(18px); }
 
-  /* tabs */
-  nav.tabs { flex:none; display:flex; border-top:1px solid var(--line-soft); padding:8px 6px 20px; background:var(--card); }
-  nav.tabs button {
-    flex:1; background:none; border:0; font:inherit; cursor:pointer;
+  nav.tabs { flex:none; display:flex; border-top:1px solid var(--line-soft); padding:8px 4px 20px; background:var(--card); }
+  nav.tabs button { flex:1; background:none; border:0; font:inherit; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; gap:3px;
-    font-size:9.5px; font-weight:650; color:var(--ink-3); padding:4px 0; position:relative;
-  }
+    font-size:9.5px; font-weight:650; color:var(--ink-3); padding:4px 0; position:relative; }
   nav.tabs button[aria-current="page"] { color:var(--ink); }
   nav.tabs svg { width:21px; height:21px; opacity:.5; }
   nav.tabs button[aria-current="page"] svg { opacity:1; }
-  nav.tabs .badge {
-    position:absolute; top:0; right:calc(50% - 16px); min-width:16px; height:16px; padding:0 4px;
+  nav.tabs .badge { position:absolute; top:0; right:calc(50% - 16px); min-width:16px; height:16px; padding:0 4px;
     background:var(--accent); color:var(--accent-ink); border-radius:999px;
-    font-size:9.5px; font-weight:750; display:grid; place-items:center; font-variant-numeric:tabular-nums;
-  }
+    font-size:9.5px; font-weight:750; display:grid; place-items:center; font-variant-numeric:tabular-nums; }
 
-  /* cta bar */
-  .cta { flex:none; display:flex; align-items:center; gap:12px; padding:12px 20px 20px; border-top:1px solid var(--line-soft); background:var(--card); }
-  .cta .price { font-size:11.5px; color:var(--ink-3); font-weight:650; flex:none; }
+  .cta { flex:none; display:flex; align-items:center; gap:10px; padding:12px 20px 20px;
+    border-top:1px solid var(--line-soft); background:var(--card); }
+  .cta .price { font-size:11px; color:var(--ink-3); font-weight:650; flex:none; }
   .cta .price b { display:block; font-size:17px; color:var(--ink); font-weight:750; font-variant-numeric:tabular-nums; }
   .cta .btn { width:auto; flex:1; }
 
-  /* push banner */
-  #push {
-    position:absolute; top:10px; left:12px; right:12px; z-index:50;
+  #push { position:absolute; top:10px; left:12px; right:12px; z-index:50;
     background:var(--ink); color:var(--paper); border-radius:18px; padding:12px 14px;
     display:none; gap:11px; align-items:center; cursor:pointer; text-align:left;
-    box-shadow:0 12px 32px -8px rgba(0,0,0,.5); border:0; font:inherit; width:calc(100% - 24px);
-  }
+    box-shadow:0 12px 32px -8px rgba(0,0,0,.5); border:0; font:inherit; width:calc(100% - 24px); }
   #push.show { display:flex; animation:slidein .35s cubic-bezier(.2,1,.3,1) both; }
-  #push .ic { width:32px; height:32px; border-radius:9px; background:var(--accent); color:var(--accent-ink);
-    display:grid; place-items:center; font-size:15px; flex:none; }
+  #push .ic { width:34px; height:34px; border-radius:10px; background:var(--accent); color:var(--accent-ink);
+    display:grid; place-items:center; font-size:16px; flex:none; }
   #push .t { min-width:0; }
   #push .t b { display:block; font-size:13px; font-weight:700; }
   #push .t span { display:block; font-size:12px; opacity:.75; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-  /* toast */
-  #toast {
-    position:absolute; bottom:96px; left:50%; transform:translateX(-50%);
+  #toast { position:absolute; bottom:96px; left:50%; transform:translateX(-50%);
     background:var(--ink); color:var(--paper); padding:11px 18px; border-radius:999px;
-    font-size:13px; font-weight:600; z-index:60; display:none; white-space:nowrap;
-    box-shadow:0 8px 24px -6px rgba(0,0,0,.4);
-  }
+    font-size:13px; font-weight:600; z-index:60; display:none; max-width:86%; text-align:center;
+    box-shadow:0 8px 24px -6px rgba(0,0,0,.4); }
   #toast.show { display:block; animation:fadeup .25s ease both; }
 
-  /* sheet */
   #sheet { position:absolute; inset:0; z-index:70; display:none; }
   #sheet.show { display:block; }
-  #sheet .scrim { position:absolute; inset:0; background:rgba(8,12,10,.5); border:0; width:100%; cursor:pointer; }
-  #sheet .panel {
-    position:absolute; left:0; right:0; bottom:0; background:var(--card);
-    border-radius:24px 24px 0 0; padding:22px 20px 26px;
-    display:flex; flex-direction:column; gap:12px;
-    animation:slideup .3s cubic-bezier(.2,1,.3,1) both;
-  }
+  #sheet .scrim { position:absolute; inset:0; background:rgba(8,12,10,.55); border:0; width:100%; cursor:pointer; }
+  #sheet .panel { position:absolute; left:0; right:0; bottom:0; background:var(--card);
+    border-radius:24px 24px 0 0; padding:22px 20px 26px; max-height:84%; overflow-y:auto;
+    display:flex; flex-direction:column; gap:11px;
+    animation:slideup .3s cubic-bezier(.2,1,.3,1) both; }
   @keyframes slideup { from{transform:translateY(100%)} to{transform:translateY(0)} }
-  #sheet h3 { margin:0; font-size:19px; font-weight:750; letter-spacing:-.02em; }
+  #sheet h3 { margin:0; font-size:20px; font-weight:750; letter-spacing:-.025em; text-wrap:balance; }
   #sheet p { margin:0; font-size:13.5px; color:var(--ink-2); line-height:1.55; }
+  #sheet .big { font-size:46px; text-align:center; line-height:1.1; margin:2px 0 -4px; }
+  #sheet code { display:block; background:var(--card-2); border-radius:10px; padding:11px 13px;
+    font-size:12px; word-break:break-all; color:var(--ink-2);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
 
-  .brand {
-    font-size:44px; font-weight:800; letter-spacing:-.045em; margin:0;
-    line-height:1;
-  }
+  .brand { font-size:44px; font-weight:800; letter-spacing:-.045em; margin:0; line-height:1; }
   .brand em { font-style:normal; color:var(--accent); }
-  .demo-note { font-size:11px; color:var(--ink-3); text-align:center; line-height:1.5; }
+  .note { font-size:11px; color:var(--ink-3); line-height:1.5; text-align:center; }
+  .note.left { text-align:left; margin:0; }
+  .vid { display:flex; align-items:center; gap:11px; width:100%; text-align:left; font:inherit;
+    border:1px solid var(--line-soft); border-radius:12px; padding:9px 11px; background:var(--card);
+    color:var(--ink); cursor:pointer; }
+  .vid .play { width:38px; height:28px; border-radius:7px; background:var(--accent); color:#fff;
+    display:grid; place-items:center; font-size:10px; flex:none; }
+  .vid .t { min-width:0; }
+  .vid .t b { display:block; font-size:13px; font-weight:650; }
+  .vid .t span { display:block; font-size:11px; color:var(--ink-3); }
 </style>
 
 <div id="device">
@@ -374,142 +358,304 @@
 (function () {
   "use strict";
 
-  /* ---------------- data ---------------- */
-  var KEY = "hangout.v1";
-  var COLORS = { AR:"#3C7A5A", PR:"#7A4E9B", TM:"#2F6F8F", RJ:"#B0653C", ME:"#8F4358", DK:"#4A6B8A", CW:"#6B7A3C" };
-  var NEARBY = { badminton: 38, cricket: 12 };
+  /* ======================================================================
+     THE SPORT ENGINE
 
-  var PEOPLE = [
-    { id:"ar", name:"Arjun R.", first:"Arjun", ini:"AR", far:0.8, plays:["cricket","badminton"], blurb:"Cricket · Badminton", tag:"New to Leicester", tagNew:true },
-    { id:"pr", name:"Priya R.", first:"Priya", ini:"PR", far:1.1, plays:["badminton"], blurb:"Badminton · plays most Fridays", tag:"Active Wigston" },
-    { id:"tm", name:"Tom M.",   first:"Tom",   ini:"TM", far:1.4, plays:["badminton"], blurb:"Badminton · runs the Friday game", tag:"Hosts games" },
-    { id:"rj", name:"Rehan J.", first:"Rehan", ini:"RJ", far:3.2, plays:["cricket"], blurb:"Cricket · Sunday tape-ball at Evington", tag:"Hosts games" },
-    { id:"me", name:"Meera E.", first:"Meera", ini:"ME", far:4.6, plays:["badminton"], blurb:"Badminton · beginner, keen to learn", tag:"New to Leicester", tagNew:true },
-    { id:"dk", name:"Dan K.",   first:"Dan",   ini:"DK", far:2.0, plays:["badminton","cricket"], blurb:"Badminton · Tuesday ladder", tag:"" },
-    { id:"cw", name:"Chris W.", first:"Chris", ini:"CW", far:5.1, plays:["cricket"], blurb:"Cricket · hardball, Grace Road nets", tag:"" }
-  ];
-  function person(id) { for (var i=0;i<PEOPLE.length;i++) if (PEOPLE[i].id===id) return PEOPLE[i]; return null; }
-  function p2p(id) { var p = person(id); return { id:p.id, name:p.first, ini:p.ini }; }
-
-  var REPLIES = {
-    ar:["Mate, thank you. I'll be there.","That's brilliant — I've been here since March and not swung a bat once.","Perfect. See you Sunday 🏏"],
-    pr:["Yes! We're always short on Fridays.","Sounds good — Court 3, 7pm.","👍"],
-    tm:["Brilliant, see you Friday 👊","Court's booked, just bring trainers.","No worries, all levels welcome."],
-    rj:["Course, just turn up. It's a friendly game.","We start about 10, usually go till 12.","Nice one 🏏"],
-    me:["Oh good, I'm a total beginner so no pressure!","I'd love that, thank you.","See you there 🏸"],
-    dk:["Yeah I'm about most Tuesdays.","Cool, add me in.","👍"],
-    cw:["Nets are decent at Grace Road, worth a go.","Let me know when you're playing.","👍"]
+     A sport is a config entry, not code. The post form, the join rules,
+     the cost split, the roster, the sides, the guides — all render from
+     these fields. Adding pickleball is typing an object, not a rewrite.
+     ====================================================================== */
+  var SPORTS = {
+    badminton: {
+      name:"Badminton", emoji:"🏸", live:true, threshold:20,
+      shape:"fixed", players:{ min:4, max:4, ideal:4 },
+      venue:"booked", cost:"split", setting:"indoor", season:"year-round",
+      levels:true, levelNames:["Beginner","Improver","Intermediate","Advanced"],
+      kit:["Racket — spares usually available","Non-marking indoor trainers"],
+      duration:60, defaultCost:20, weather:false,
+      guides:[
+        { t:"Badminton basics in 8 minutes", by:"Badminton Insight", len:"8:12" },
+        { t:"The five shots every beginner needs", by:"BadmintonPros", len:"11:40" },
+        { t:"Doubles positioning, explained", by:"Shuttle Smash", len:"6:55" }
+      ]
+    },
+    cricket: {
+      name:"Cricket", emoji:"🏏", live:true, threshold:20,
+      shape:"range", players:{ min:8, max:22, ideal:11 },
+      venue:"free", cost:"free", setting:"outdoor", season:"summer",
+      levels:false, levelNames:[],
+      kit:["Bat and ball provided","Trainers","Sun cream — optimistic, this is Leicester"],
+      duration:150, defaultCost:0, weather:true,
+      guides:[
+        { t:"Cricket explained for total beginners", by:"Lord's", len:"9:30" },
+        { t:"How to bat: the basics", by:"Cricket Academy", len:"14:02" },
+        { t:"Tape-ball cricket — the rules", by:"StreetCricket", len:"5:18" }
+      ]
+    },
+    football: {
+      name:"Football", emoji:"⚽", live:false, threshold:20,
+      shape:"sides", players:{ min:10, max:22, ideal:10 }, sides:{ n:2, perSide:5 },
+      venue:"booked", cost:"split", setting:"outdoor", season:"year-round",
+      levels:false, levelNames:[],
+      kit:["Boots or astro trainers","Bring a light shirt and a dark one"],
+      duration:60, defaultCost:55, weather:true,
+      guides:[{ t:"Five-a-side tactics that actually work", by:"Football Weekly", len:"7:44" }]
+    },
+    padel: {
+      name:"Padel", emoji:"🎾", live:false, threshold:20,
+      shape:"fixed", players:{ min:4, max:4, ideal:4 },
+      venue:"booked", cost:"split", setting:"outdoor", season:"year-round",
+      levels:true, levelNames:["Beginner","Improver","Intermediate","Advanced"],
+      kit:["Padel bat — courts hire them out","Trainers"],
+      duration:90, defaultCost:32, weather:false,
+      guides:[{ t:"Padel in 10 minutes — rules and scoring", by:"The Padel School", len:"10:05" }]
+    },
+    tennis: {
+      name:"Tennis", emoji:"🥎", live:false, threshold:20,
+      shape:"fixed", players:{ min:2, max:4, ideal:4 },
+      venue:"booked", cost:"split", setting:"outdoor", season:"summer",
+      levels:true, levelNames:["Beginner","Improver","Intermediate","Advanced"],
+      kit:["Racket","Balls","Trainers"],
+      duration:60, defaultCost:12, weather:true, guides:[]
+    },
+    pickleball: {
+      name:"Pickleball", emoji:"🥒", live:false, threshold:20,
+      shape:"fixed", players:{ min:4, max:4, ideal:4 },
+      venue:"booked", cost:"split", setting:"indoor", season:"year-round",
+      levels:true, levelNames:["Beginner","Improver","Intermediate","Advanced"],
+      kit:["Paddle — usually provided","Indoor trainers"],
+      duration:60, defaultCost:14, weather:false, guides:[]
+    },
+    squash: {
+      name:"Squash", emoji:"🎯", live:false, threshold:20,
+      shape:"fixed", players:{ min:2, max:2, ideal:2 },
+      venue:"booked", cost:"split", setting:"indoor", season:"year-round",
+      levels:true, levelNames:["Beginner","Improver","Intermediate","Advanced"],
+      kit:["Racket","Eye guards","Indoor trainers"],
+      duration:40, defaultCost:10, weather:false, guides:[]
+    },
+    running: {
+      name:"Running", emoji:"👟", live:false, threshold:15,
+      shape:"range", players:{ min:2, max:30, ideal:8 },
+      venue:"free", cost:"free", setting:"outdoor", season:"year-round",
+      levels:true, levelNames:["Couch to 5k","5k","10k","Half and up"],
+      kit:["Trainers. That's it."],
+      duration:45, defaultCost:0, weather:true, guides:[]
+    }
   };
-
-  function seedGames() {
-    return [
-      { id:"g1", activity:"badminton", title:"Friday doubles at Active Wigston",
-        venue:"Active Wigston, Station Rd", court:"Court 3", far:1.2, day:nextDow(5), time:"7:00pm",
-        cost:20, need:4, host:"tm", players:[p2p("tm"),p2p("pr"),p2p("dk")],
-        note:"Dan's mate dropped out. Beginners welcome, we're not serious.",
-        booked:false, paid:[], msgs:[
-          { from:"tm", text:"Right, we're a player down for Friday 😬", ago:180 },
-          { from:"pr", text:"I've asked at work, nobody's biting.", ago:120 },
-          { from:"tm", text:"Posting it on here then. Someone will turn up.", ago:60 }
-        ] },
-      { id:"g2", activity:"cricket", title:"Sunday tape-ball at Evington Park",
-        venue:"Evington Park, Leicester", court:"Top field", far:3.4, day:nextDow(0), time:"10:00am",
-        cost:0, need:11, host:"rj", players:[p2p("rj"),p2p("cw"),p2p("ar"),p2p("dk"),{id:"x1",name:"Sam",ini:"SM"},{id:"x2",name:"Vik",ini:"VK"},{id:"x3",name:"Joe",ini:"JO"},{id:"x4",name:"Amit",ini:"AM"}],
-        note:"Every Sunday, rain or shine. All ages, all abilities. Free.",
-        booked:true, paid:[], msgs:[
-          { from:"rj", text:"Usual spot, 10am. Bring a jumper.", ago:300 }
-        ] },
-      { id:"g3", activity:"badminton", title:"Tuesday singles ladder",
-        venue:"Aylestone Leisure Centre", court:"Courts 1–2", far:4.1, day:nextDow(2), time:"8:00pm",
-        cost:16, need:4, host:"dk", players:[p2p("dk"),p2p("pr"),p2p("me"),p2p("tm")],
-        note:"Competitive-ish. We rotate singles matches.",
-        booked:true, paid:["dk","pr"], msgs:[] },
-      { id:"g4", activity:"cricket", title:"Thursday nets at Grace Road",
-        venue:"Grace Road nets, Leicester", court:"Net 2", far:2.8, day:nextDow(4), time:"6:30pm",
-        cost:24, need:6, host:"cw", players:[p2p("cw"),p2p("ar"),p2p("rj")],
-        note:"Hardball nets. Bring your own kit if you have it, spares available.",
-        booked:false, paid:[], msgs:[] }
-    ];
+  function sportIds() { return Object.keys(SPORTS); }
+  function sp(id) { return SPORTS[id]; }
+  function defaultNeed(id) {
+    var s = sp(id);
+    return s.shape === "sides" ? s.sides.n * s.sides.perSide : s.players.ideal;
   }
 
-  /* days: 0=Sun..6=Sat -> ms timestamp of next such day */
+  /* VENUES — a finite, knowable list. Seeded before a single user exists,
+     which is why the app is never truly empty. */
+  var VENUES = [
+    { id:"v1",  name:"Active Wigston",           area:"Station Rd, Wigston",      far:1.2, sports:["badminton","squash"],                  price:20, unit:"hour" },
+    { id:"v2",  name:"Wigston Tennis Club",      area:"Blaby Rd",                 far:1.6, sports:["tennis"],                              price:12, unit:"hour" },
+    { id:"v3",  name:"Grace Road nets",          area:"Aylestone, Leicester",     far:2.8, sports:["cricket"],                             price:24, unit:"hour" },
+    { id:"v4",  name:"Evington Park",            area:"Evington, Leicester",      far:3.4, sports:["cricket","running"],                   price:0,  unit:"" },
+    { id:"v5",  name:"Aylestone Leisure Centre", area:"Knighton Lane East",       far:4.1, sports:["badminton","squash","pickleball"],     price:16, unit:"hour" },
+    { id:"v6",  name:"Victoria Park",            area:"Leicester",                far:4.8, sports:["cricket","running","football"],        price:0,  unit:"" },
+    { id:"v7",  name:"Powerleague Leicester",    area:"Meridian Way",             far:5.5, sports:["football"],                            price:55, unit:"hour" },
+    { id:"v8",  name:"Braunstone Leisure Centre",area:"Braunstone",               far:5.6, sports:["badminton","football"],                price:18, unit:"hour" },
+    { id:"v9",  name:"Leicester Leys Centre",    area:"Beaumont Leys",            far:6.2, sports:["badminton","football","pickleball"],   price:22, unit:"hour" },
+    { id:"v10", name:"Padel4All Leicester",      area:"Meridian Business Park",   far:6.9, sports:["padel"],                               price:32, unit:"90 min" }
+  ];
+  function venuesFor(id) {
+    return VENUES.filter(function (v) { return v.sports.indexOf(id) !== -1; })
+      .sort(function (a, b) { return a.far - b.far; });
+  }
+  function venue(id) { for (var i = 0; i < VENUES.length; i++) if (VENUES[i].id === id) return VENUES[i]; return VENUES[0]; }
+
+  /* PEOPLE — each with an attendance record, because no-shows are the disease */
+  var COLORS = { AR:"#3C7A5A", PR:"#7A4E9B", TM:"#2F6F8F", RJ:"#B0653C", ME:"#8F4358",
+                 DK:"#4A6B8A", CW:"#6B7A3C", SM:"#8A5A3C", VK:"#3C6B7A", JO:"#7A3C5A", AM:"#5A7A3C" };
+  var PEOPLE = [
+    { id:"ar", name:"Arjun R.", first:"Arjun", ini:"AR", far:0.8, plays:["cricket","badminton"],
+      levels:{ badminton:"Improver" }, record:{ played:4, missed:0 }, tag:"New to Leicester", tagNew:true },
+    { id:"pr", name:"Priya R.", first:"Priya", ini:"PR", far:1.1, plays:["badminton","padel"],
+      levels:{ badminton:"Intermediate", padel:"Improver" }, record:{ played:23, missed:1 }, tag:"" },
+    { id:"tm", name:"Tom M.",   first:"Tom",   ini:"TM", far:1.4, plays:["badminton","football"],
+      levels:{ badminton:"Intermediate" }, record:{ played:31, missed:2 }, tag:"Hosts games" },
+    { id:"rj", name:"Rehan J.", first:"Rehan", ini:"RJ", far:3.2, plays:["cricket","football"],
+      levels:{}, record:{ played:18, missed:1 }, tag:"Hosts games" },
+    { id:"me", name:"Meera E.", first:"Meera", ini:"ME", far:4.6, plays:["badminton","padel"],
+      levels:{ badminton:"Beginner", padel:"Beginner" }, record:{ played:2, missed:0 }, tag:"New to Leicester", tagNew:true },
+    { id:"dk", name:"Dan K.",   first:"Dan",   ini:"DK", far:2.0, plays:["badminton","cricket"],
+      levels:{ badminton:"Improver" }, record:{ played:9, missed:4 }, tag:"" },
+    { id:"cw", name:"Chris W.", first:"Chris", ini:"CW", far:5.1, plays:["cricket","football"],
+      levels:{}, record:{ played:12, missed:0 }, tag:"" },
+    { id:"sm", name:"Sam O.",   first:"Sam",   ini:"SM", far:2.4, plays:["cricket","football"],
+      levels:{}, record:{ played:7, missed:1 }, tag:"" },
+    { id:"vk", name:"Vik P.",   first:"Vik",   ini:"VK", far:3.9, plays:["cricket","football"],
+      levels:{}, record:{ played:15, missed:2 }, tag:"" }
+  ];
+  function person(id) {
+    if (id === "me" && S && S.user) {
+      return { id:"me", name:S.user.name, first:S.user.name, ini:S.user.ini, far:0,
+        plays:S.user.plays, levels:S.user.levels, record:S.user.record,
+        tag:S.user.isNew ? "New to the area" : "" };
+    }
+    for (var i = 0; i < PEOPLE.length; i++) if (PEOPLE[i].id === id) return PEOPLE[i];
+    return null;
+  }
+  function p2p(id) { var p = person(id); return { id:p.id, name:p.first, ini:p.ini }; }
+
+  /* how many people near LE18 want each sport — the number that decides
+     whether a sport is a market or an empty room */
+  var DEMAND_SEED = { badminton:38, cricket:12, football:19, padel:12, tennis:9, pickleball:4, squash:6, running:11 };
+
+  var REPLIES = {
+    ar:["Mate, thank you. I'll be there.","I've been here since March and not swung a bat once.","Perfect, see you Sunday 🏏"],
+    pr:["Yes! We're always short on Fridays.","Court 3, 7pm. Don't be late.","👍"],
+    tm:["Brilliant, see you Friday 👊","Court's booked, just bring trainers.","All levels welcome, honestly."],
+    rj:["Course, just turn up. It's a friendly game.","We start about 10, go till 12.","Nice one 🏏"],
+    me:["Oh good — I'm a total beginner, so no pressure!","I'd love that, thank you.","See you there 🏸"],
+    dk:["Yeah, I'm about most Tuesdays.","Cool, add me in.","👍"],
+    cw:["Nets are decent at Grace Road, worth a go.","Let me know when you're playing.","👍"],
+    sm:["I'm in.","Sound.","👍"],
+    vk:["Count me in.","👍"]
+  };
+
+  /* ---------------- time & format ---------------- */
+  var DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   function nextDow(dow) {
-    var d = new Date(); d.setHours(0,0,0,0);
+    var d = new Date(); d.setHours(0, 0, 0, 0);
     var diff = (dow - d.getDay() + 7) % 7;
     if (diff === 0) diff = 7;
     d.setDate(d.getDate() + diff);
     return d.getTime();
   }
-  var DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   function whenLabel(ts) {
-    var d = new Date(ts), n = new Date(); n.setHours(0,0,0,0);
+    var d = new Date(ts), n = new Date(); n.setHours(0, 0, 0, 0);
     var days = Math.round((d - n) / 86400000);
     if (days === 0) return "Today";
     if (days === 1) return "Tomorrow";
     if (days < 7) return DAYS[d.getDay()];
-    return DAYS[d.getDay()].slice(0,3) + " " + d.getDate();
+    return DAYS[d.getDay()].slice(0, 3) + " " + d.getDate();
   }
-  function agoLabel(mins) {
-    if (mins < 60) return mins + "m";
-    if (mins < 1440) return Math.round(mins/60) + "h";
-    return Math.round(mins/1440) + "d";
+  function dowOf(ts) { return DAYS[new Date(ts).getDay()]; }
+  function money(n) { return "£" + Number(n).toFixed(2); }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c];
+    });
   }
-  function money(n) { return "£" + n.toFixed(2); }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); }
+  /* what the venues near you actually charge — free parks and paid courts both exist */
+  function costRange(vs) {
+    if (!vs.length) return "—";
+    var prices = vs.map(function (v) { return v.price; });
+    var lo = Math.min.apply(null, prices), hi = Math.max.apply(null, prices);
+    if (hi === 0) return "Free";
+    if (lo === 0) return "Free to £" + hi + ", split";
+    return lo === hi ? "£" + lo + ", split" : "£" + lo + "–£" + hi + ", split";
+  }
+
+  /* ---------------- seed ---------------- */
+  function seedGames() {
+    return [
+      { id:"g1", sport:"badminton", title:"Friday doubles", venueId:"v1", court:"Court 3",
+        day:nextDow(5), time:"7:00pm", cost:20, need:4, host:"tm",
+        repeats:true, regulars:["tm","pr","dk","cw"],
+        players:[p2p("tm"), p2p("pr"), p2p("dk")], waitlist:[], out:["cw"],
+        level:"any", beginners:true,
+        note:"Chris can't make it this week. Beginners welcome — we're really not serious.",
+        booked:true, hostPaid:true, paid:["tm"], cancelled:false,
+        msgs:[
+          { from:"tm", text:"Chris is out this week, so we're a player down 😬" },
+          { from:"pr", text:"I've asked at work. Nobody's biting." },
+          { from:"tm", text:"Putting it on Hangout then. Someone will turn up." }
+        ] },
+      { id:"g2", sport:"cricket", title:"Sunday tape-ball", venueId:"v4", court:"Top field",
+        day:nextDow(0), time:"10:00am", cost:0, need:11, host:"rj",
+        repeats:true, regulars:["rj","cw","ar","dk","sm","vk"],
+        players:[p2p("rj"), p2p("cw"), p2p("ar"), p2p("dk"), p2p("sm"), p2p("vk"),
+                 { id:"x3", name:"Joe", ini:"JO" }, { id:"x4", name:"Amit", ini:"AM" }],
+        waitlist:[], out:[], level:"any", beginners:true,
+        note:"Every Sunday, rain or shine. All ages, all abilities. Free.",
+        booked:true, hostPaid:false, paid:[], cancelled:false,
+        msgs:[{ from:"rj", text:"Usual spot, 10am. Bring a jumper." }] },
+      { id:"g3", sport:"badminton", title:"Tuesday singles ladder", venueId:"v5", court:"Courts 1–2",
+        day:nextDow(2), time:"8:00pm", cost:16, need:4, host:"dk",
+        repeats:true, regulars:["dk","pr","me","tm"],
+        players:[p2p("dk"), p2p("pr"), p2p("me"), p2p("tm")], waitlist:[], out:[],
+        level:"Intermediate", beginners:false,
+        note:"Competitive. We rotate singles matches. Intermediate and up, honestly.",
+        booked:true, hostPaid:true, paid:["dk","pr"], cancelled:false, msgs:[] },
+      { id:"g4", sport:"cricket", title:"Thursday hardball nets", venueId:"v3", court:"Net 2",
+        day:nextDow(4), time:"6:30pm", cost:24, need:6, host:"cw",
+        repeats:false, regulars:[], players:[p2p("cw"), p2p("ar"), p2p("rj")],
+        waitlist:[], out:[], level:"any", beginners:false,
+        note:"Hardball nets. Bring your kit if you've got it — spares available.",
+        booked:false, hostPaid:false, paid:[], cancelled:false, msgs:[] }
+    ];
+  }
 
   /* ---------------- state ---------------- */
+  var KEY = "hangout.v2";
   var S = null;
   function fresh() {
-    return { onboarded:false, user:null, games:seedGames(), chats:{}, notify:true, seenPush:{} };
+    return { onboarded:false, user:null, games:seedGames(), chats:{}, notify:true,
+      demand:JSON.parse(JSON.stringify(DEMAND_SEED)), wanted:[], unlocked:[], post:null, peopleFilter:"all" };
   }
   function load() {
     try { var raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
     return fresh();
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
-  function reset() { S = fresh(); save(); go("welcome"); }
 
-  function game(id) { for (var i=0;i<S.games.length;i++) if (S.games[i].id===id) return S.games[i]; return null; }
-  function inGame(g) { for (var i=0;i<g.players.length;i++) if (g.players[i].id==="me") return true; return false; }
-  function myGames() { return S.games.filter(inGame); }
+  function isLive(id) { return SPORTS[id].live || S.unlocked.indexOf(id) !== -1; }
+  function myLiveSports() { return S.user ? S.user.plays.filter(isLive) : []; }
+  function game(id) { for (var i = 0; i < S.games.length; i++) if (S.games[i].id === id) return S.games[i]; return null; }
+  function inGame(g) { return g.players.some(function (p) { return p.id === "me"; }); }
+  function onList(g) { return g.waitlist.indexOf("me") !== -1; }
+  function isRegular(g) { return g.regulars.indexOf("me") !== -1; }
+  function spotsLeft(g) { return g.need - g.players.length; }
   function share(g) { return g.cost > 0 ? g.cost / Math.max(g.players.length, 1) : 0; }
-  function unread() {
-    var n = 0;
-    for (var k in S.chats) if (S.chats[k].unread) n += S.chats[k].unread;
-    return n;
-  }
-  function relevant(g) {
-    if (!S.user) return true;
-    return S.user.plays.indexOf(g.activity) !== -1;
-  }
+  function shareIfIJoin(g) { return g.cost > 0 ? g.cost / (g.players.length + 1) : 0; }
+  function myShare(g) { return inGame(g) ? share(g) : shareIfIJoin(g); }
+  function unread() { var n = 0; for (var k in S.chats) n += (S.chats[k].unread || 0); return n; }
+
+  function relevant(g) { return S.user && S.user.plays.indexOf(g.sport) !== -1 && isLive(g.sport); }
   function feed() {
-    var gs = S.games.filter(relevant);
-    gs.sort(function (a, b) {
-      var an = a.players.length < a.need, bn = b.players.length < b.need;
+    return S.games.filter(relevant).sort(function (a, b) {
+      var an = spotsLeft(a) > 0, bn = spotsLeft(b) > 0;
       if (an !== bn) return an ? -1 : 1;
       return a.day - b.day;
     });
-    return gs;
+  }
+  /* recurring games I'm a regular of but haven't answered for this week */
+  function needsAnswer() {
+    return S.games.filter(function (g) {
+      return g.repeats && isRegular(g) && !inGame(g) && g.out.indexOf("me") === -1 && isLive(g.sport) && !g.cancelled;
+    });
+  }
+  function reliability(p) {
+    var r = (p && p.record) || { played:0, missed:0 };
+    var total = r.played + r.missed;
+    if (!total) return { txt:"New", cls:"none" };
+    return { txt:r.played + " of " + total, cls:(r.played / total >= 0.85 ? "" : "low") };
   }
 
   /* ---------------- shell ---------------- */
   var root = document.getElementById("root");
   var view = { name:"welcome", arg:null };
   var stack = [];
-
   function go(name, arg, replace) {
-    if (!replace && view.name !== name) stack.push({ name:view.name, arg:view.arg });
+    if (!replace && !(view.name === name && view.arg === arg)) stack.push({ name:view.name, arg:view.arg });
     view = { name:name, arg:arg };
     render();
   }
-  function back() {
-    var prev = stack.pop();
-    view = prev || { name:"home", arg:null };
-    render();
-  }
+  function back() { view = stack.pop() || { name:"home", arg:null }; render(); }
 
   var TABS = [
     { id:"home",   label:"Near you", icon:'<path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-7H9v7H4a1 1 0 01-1-1z"/>' },
-    { id:"post",   label:"Post",     icon:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>' },
+    { id:"sports", label:"Sports",   icon:'<circle cx="12" cy="12" r="9"/><path d="M12 3a15 15 0 010 18M3.5 9h17M3.5 15h17"/>' },
     { id:"people", label:"People",   icon:'<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0112 0M17 11a3 3 0 100-6M21 20a6 6 0 00-4-5.6"/>' },
     { id:"chats",  label:"Chats",    icon:'<path d="M21 15a3 3 0 01-3 3H8l-5 3V6a3 3 0 013-3h12a3 3 0 013 3z"/>' },
     { id:"you",    label:"You",      icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>' }
@@ -517,219 +663,336 @@
   function tabs(active) {
     var u = unread();
     return '<nav class="tabs">' + TABS.map(function (t) {
-      var badge = (t.id === "chats" && u) ? '<span class="badge">' + u + "</span>" : "";
-      return '<button data-go="' + t.id + '"' + (t.id === active ? ' aria-current="page"' : "") + ">" + badge +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      return '<button data-go="' + t.id + '"' + (t.id === active ? ' aria-current="page"' : "") + ">" +
+        (t.id === "chats" && u ? '<span class="badge">' + u + "</span>" : "") +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
         t.icon + "</svg>" + t.label + "</button>";
     }).join("") + "</nav>";
   }
   function nav(o) {
     return '<div class="nav">' +
       (o.back ? '<button class="back" data-back="1" aria-label="Back">‹</button>' : "") +
-      '<div class="titles"><h1>' + o.title + "</h1>" +
-      (o.sub ? '<div class="sub">' + o.sub + "</div>" : "") + "</div>" +
-      (o.action ? '<button class="act" data-go="' + o.action.go + '">' + o.action.label + "</button>" : "") +
-      "</div>";
+      '<div class="titles"><h1>' + o.title + "</h1>" + (o.sub ? '<div class="sub">' + o.sub + "</div>" : "") + "</div>" +
+      (o.action ? '<button class="act" data-act="' + o.action.act + '"' +
+        (o.action.id ? ' data-id="' + o.action.id + '"' : "") + ">" + o.action.label + "</button>" : "") + "</div>";
   }
   function avatar(ini, cls) {
-    var c = COLORS[ini] || "#5C6B62";
-    return '<span class="av ' + (cls || "") + '" style="background:' + c + '">' + ini + "</span>";
+    return '<span class="av ' + (cls || "") + '" style="background:' + (COLORS[ini] || "#5C6B62") + '">' + esc(ini) + "</span>";
   }
 
   /* ---------------- screens ---------------- */
   var V = {};
 
   V.welcome = function () {
-    return '<main class="center" style="gap:16px; padding:0 28px">' +
+    return '<main class="center" style="gap:15px; padding:0 28px">' +
       '<p class="brand">hang<em>out</em></p>' +
       '<p class="copy" style="max-width:26ch">Somebody near you is one player short. Find them.</p>' +
-      '<div style="height:20px"></div>' +
+      '<div style="height:14px"></div>' +
       '<button class="btn" data-go="signup">Create an account</button>' +
       '<button class="btn ghost" data-act="demo-signin">I\'ve already got one</button>' +
-      '<p class="demo-note" style="margin-top:14px">Prototype · Cricket &amp; badminton · 10 miles of Wigston</p>' +
+      '<p class="note" style="margin-top:12px">Prototype · Leicester · 2 sports live, 6 waiting to open</p>' +
       "</main>";
   };
 
   V.signup = function () {
     return nav({ title:"Create your account", sub:"Two minutes, then you're in", back:true }) +
-      '<main>' +
+      "<main>" +
       '<div class="field"><label for="f-name">Your name</label><input id="f-name" type="text" placeholder="Shiv" autocomplete="given-name"></div>' +
       '<div class="field"><label for="f-email">Email</label><input id="f-email" type="email" placeholder="you@email.com" autocomplete="email"></div>' +
       '<div class="field"><label for="f-pass">Password</label><input id="f-pass" type="password" placeholder="••••••••"></div>' +
-      '<p class="copy" style="font-size:12px; margin-top:2px">We only ever show your first name and an approximate distance. Never your address.</p>' +
-      '<div style="flex:1"></div>' +
-      '<button class="btn" data-act="signup">Continue</button>' +
-      "</main>";
+      '<p class="copy" style="font-size:12px">We only ever show your first name and a rough distance. Never your address.</p>' +
+      '<div style="flex:1; min-height:8px"></div>' +
+      '<button class="btn" data-act="signup">Continue</button></main>';
   };
 
   V.pick = function () {
     var sel = S.draft.plays;
-    function row(id, ico, name, desc) {
-      return '<button class="pick" data-act="toggle-play" data-id="' + id + '" aria-pressed="' + (sel.indexOf(id) !== -1) + '">' +
-        '<span class="ico">' + ico + '</span><span class="t"><b>' + name + "</b><span>" + desc + "</span></span>" +
-        '<span class="tick">✓</span></button>';
+    var live = sportIds().filter(function (id) { return SPORTS[id].live; });
+    var soon = sportIds().filter(function (id) { return !SPORTS[id].live; });
+
+    function tile(id, live) {
+      var s = sp(id), on = sel.indexOf(id) !== -1;
+      var sub = live
+        ? plural(S.demand[id], "person", "people") + " play this within 10 miles"
+        : S.demand[id] + " of " + s.threshold + " people needed near you";
+      var meter = live ? "" : '<span class="meter' + (S.demand[id] / s.threshold > 0.8 ? " close" : "") +
+        '"><i style="width:' + Math.min(100, Math.round(S.demand[id] / s.threshold * 100)) + '%"></i></span>';
+      return '<button class="pick" data-act="toggle-play" data-id="' + id + '" aria-pressed="' + on + '">' +
+        '<span class="ico">' + s.emoji + '</span><span class="t"><b>' + s.name + "</b><span>" + sub + "</span>" +
+        meter + '</span><span class="tick">✓</span></button>';
     }
-    var soon = ["Book club","Running","Parent &amp; toddler","Football","Library trips","Chess"];
+
     return nav({ title:"What do you play?", sub:"Pick everything you'd turn up for", back:true }) +
-      '<main>' +
-      row("cricket", "🏏", "Cricket", "Hardball, tape ball, nets, park games") +
-      row("badminton", "🏸", "Badminton", "Singles, doubles, any level") +
-      '<h2 class="sec">Coming as we grow</h2>' +
-      '<div class="chips">' + soon.map(function (s) { return '<button class="chip" data-act="soon">' + s + "</button>"; }).join("") + "</div>" +
-      '<div style="flex:1; min-height:12px"></div>' +
-      '<button class="btn" data-act="to-place"' + (sel.length ? "" : " disabled") + ">Continue</button>" +
-      "</main>";
+      "<main>" +
+      '<h2 class="sec">Live near you<span class="rule"></span></h2>' +
+      live.map(function (id) { return tile(id, true); }).join("") +
+      '<h2 class="sec">Not open here yet<span class="rule"></span></h2>' +
+      '<p class="copy" style="font-size:12.5px">A sport switches on when enough people nearby want it. Pick them anyway — you get counted, and told the moment it opens.</p>' +
+      soon.map(function (id) { return tile(id, false); }).join("") +
+      '<div style="flex:1; min-height:10px"></div>' +
+      '<button class="btn" data-act="to-place"' + (sel.length ? "" : " disabled") + ">Continue</button></main>";
   };
 
   V.place = function () {
     var d = S.draft;
     return nav({ title:"Where are you?", sub:"So we only show you what's close", back:true }) +
-      '<main>' +
-      '<div class="field"><label for="f-pc">Postcode district</label><input id="f-pc" type="text" value="' + d.pc + '" placeholder="LE18" autocapitalize="characters"></div>' +
-      '<p class="copy" style="font-size:12px">Just the first half — <b>LE18</b>, not the full postcode. It\'s all we need and all we\'ll ever store.</p>' +
-      '<div class="field" style="margin-top:6px"><label for="f-rad">Show me games within</label>' +
-      '<select id="f-rad">' + [3,5,10,15,25].map(function (m) {
+      "<main>" +
+      '<div class="field"><label for="f-pc">Postcode district</label>' +
+      '<input id="f-pc" type="text" value="' + esc(d.pc) + '" autocapitalize="characters">' +
+      '<span class="hint">Just the first half — <b>LE18</b>, not the full postcode. It\'s all we need and all we store.</span></div>' +
+      '<div class="field"><label for="f-rad">Show me games within</label><select id="f-rad">' +
+      [3, 5, 10, 15, 25].map(function (m) {
         return '<option value="' + m + '"' + (m === d.radius ? " selected" : "") + ">" + m + " miles</option>";
       }).join("") + "</select></div>" +
-      '<button class="pick" data-act="toggle-new" aria-pressed="' + d.isNew + '" style="margin-top:8px">' +
-      '<span class="ico">👋</span><span class="t"><b>I\'m new to the area</b><span>Shows a badge so others in your shoes can find you</span></span>' +
-      '<span class="tick">✓</span></button>' +
-      '<div style="flex:1; min-height:12px"></div>' +
-      '<button class="btn" data-act="finish">Find my people</button>' +
-      "</main>";
+      '<button class="pick" data-act="toggle-new" aria-pressed="' + d.isNew + '">' +
+      '<span class="ico">👋</span><span class="t"><b>I\'m new to the area</b>' +
+      "<span>Shows a badge, so others in your shoes can find you</span></span><span class=\"tick\">✓</span></button>" +
+      '<div style="flex:1; min-height:10px"></div>' +
+      '<button class="btn" data-act="to-levels">Continue</button></main>';
+  };
+
+  V.levels = function () {
+    var d = S.draft;
+    var need = d.plays.filter(function (id) { return sp(id).levels; });
+    return nav({ title:"How good are you?", sub:"Honestly. It makes games better, not worse.", back:true }) +
+      "<main>" +
+      '<p class="copy">In racket sports, a mismatched fourth quietly ruins the session for everyone — and nobody says anything, they just stop coming. So we ask.</p>' +
+      need.map(function (id) {
+        var s = sp(id);
+        return '<div class="field"><label>' + s.emoji + " " + s.name + "</label><div class=\"chips\">" +
+          s.levelNames.map(function (l) {
+            return '<button class="chip" data-act="set-level" data-id="' + id + '" data-v="' + l + '" aria-pressed="' +
+              (d.levels[id] === l) + '">' + l + "</button>";
+          }).join("") + "</div></div>";
+      }).join("") +
+      '<p class="copy" style="font-size:12.5px">It\'s per sport. You can be decent at one and hopeless at another — most people are.</p>' +
+      '<div style="flex:1; min-height:10px"></div>' +
+      '<button class="btn" data-act="finish">Find my people</button></main>';
   };
 
   V.home = function () {
     var gs = feed();
-    var need = gs.filter(function (g) { return g.players.length < g.need; });
-    var set  = gs.filter(function (g) { return g.players.length >= g.need; });
-    var body;
+    var ask = needsAnswer();
+    var askIds = ask.map(function (g) { return g.id; });
+    var open = gs.filter(function (g) { return spotsLeft(g) > 0 && !inGame(g) && askIds.indexOf(g.id) === -1; });
+    var mine = gs.filter(function (g) { return inGame(g); });
+    var full = gs.filter(function (g) { return spotsLeft(g) <= 0 && !inGame(g); });
 
-    if (!gs.length) {
-      var pool = S.user.plays.reduce(function (a, p) { return a + (NEARBY[p] || 0); }, 0);
+    var body;
+    if (!gs.length && !ask.length) {
+      var pool = myLiveSports().reduce(function (a, id) { return a + (S.demand[id] || 0); }, 0);
       body = '<main><div class="empty"><div class="mark">+</div><h3>No games yet</h3>' +
-        "<p>You're early. There are <b>" + pool + " people</b> within " + S.user.radius +
+        "<p>You're early. There are <b>" + plural(pool, "person", "people") + "</b> within " + S.user.radius +
         " miles who play what you play, and none of them have posted either.</p>" +
-        '<button class="btn" data-go="post">Post the first game</button>' +
-        '<button class="btn ghost" data-go="people" style="max-width:240px">See who\'s nearby</button>' +
-        "</div></main>";
+        '<button class="btn" data-act="new-game">Post the first game</button>' +
+        '<button class="btn ghost" data-go="people" style="max-width:250px">See who\'s nearby</button></div></main>';
     } else {
       body = "<main>" +
-        (need.length ? '<h2 class="sec">Needs a player</h2>' + need.map(card).join("") : "") +
-        (set.length ? '<h2 class="sec">Sorted</h2>' + set.map(card).join("") : "") +
-        '<p class="demo-note" style="margin-top:10px">Showing ' + gs.length + " game" + (gs.length===1?"":"s") +
-        " within " + S.user.radius + " miles of " + S.user.pc + "</p>" +
-        "</main>";
+        (ask.length  ? '<h2 class="sec">This week<span class="rule"></span></h2>'      + ask.map(askCard).join("") : "") +
+        (open.length ? '<h2 class="sec">Needs a player<span class="rule"></span></h2>' + open.map(card).join("")   : "") +
+        (mine.length ? '<h2 class="sec">You\'re playing<span class="rule"></span></h2>'+ mine.map(card).join("")   : "") +
+        (full.length ? '<h2 class="sec">Full<span class="rule"></span></h2>'           + full.map(card).join("")   : "") +
+        '<p class="note" style="margin-top:10px">' + plural(gs.length, "game") + " within " + S.user.radius +
+        " miles of " + esc(S.user.pc) + " · " +
+        myLiveSports().map(function (id) { return sp(id).name.toLowerCase(); }).join(" and ") + "</p></main>";
     }
-    return nav({ title:"Near you", sub:"Within " + S.user.radius + " miles of " + S.user.pc }) + body + tabs("home");
+    return nav({ title:"Near you", sub:"Within " + S.user.radius + " miles of " + esc(S.user.pc),
+      action:{ act:"new-game", label:"+ Post" } }) + body + tabs("home");
   };
 
+  /* the weekly "are you in?" card — the recurring-game loop */
+  function askCard(g) {
+    var s = sp(g.sport), v = venue(g.venueId);
+    return '<div class="gc ask">' +
+      '<div class="top"><span class="kind">Your regular · in this week?</span>' +
+      '<span class="when">' + whenLabel(g.day) + " · " + g.time + "</span></div>" +
+      "<h3>" + s.emoji + " " + esc(g.title) + "</h3>" +
+      '<div class="meta">' + esc(v.name) + "<i></i>" + g.players.length + " in so far<i></i>" +
+      (spotsLeft(g) > 0 ? plural(spotsLeft(g), "spot") + " left" : "full") + "</div>" +
+      '<div class="foot"><div class="pair">' +
+      '<button class="btn sm" data-act="join" data-id="' + g.id + '">I\'m in</button>' +
+      '<button class="btn sm ghost" data-act="out" data-id="' + g.id + '">Can\'t make it</button>' +
+      "</div></div></div>";
+  }
+
   function card(g) {
-    var missing = g.need - g.players.length;
-    var mine = inGame(g);
-    var cls = missing > 0 ? "urgent" : "filled";
-    var kind = missing > 0
-      ? missing + " spot" + (missing === 1 ? "" : "s") + " left"
-      : (mine ? "Full · you're playing" : "Full");
+    var s = sp(g.sport), v = venue(g.venueId);
+    var left = spotsLeft(g), mine = inGame(g), waiting = onList(g);
+    var cls = g.cancelled ? "" : (left > 0 ? "urgent" : "filled");
+    var kind = g.cancelled ? "Called off"
+      : left > 0 ? plural(left, "spot") + " left"
+      : mine ? "Full · you're playing"
+      : waiting ? "Full · you're on the waitlist"
+      : "Full";
+
     var pips = g.players.slice(0, 3).map(function (p) {
-      return '<span class="pip" style="background:' + (COLORS[p.ini] || "#5C6B62") + '">' + p.ini + "</span>";
+      return '<span class="pip" style="background:' + (COLORS[p.ini] || "#5C6B62") + '">' + esc(p.ini) + "</span>";
     }).join("");
     if (g.players.length > 3) pips += '<span class="pip" style="background:var(--ink-2)">+' + (g.players.length - 3) + "</span>";
-    pips += missing > 0 ? '<span class="pip empty">+</span>' : '<span class="pip empty">✓</span>';
+    pips += left > 0 ? '<span class="pip empty">+</span>' : '<span class="pip empty">✓</span>';
 
-    var btn = mine
-      ? '<button class="btn sm ghost" data-go="game" data-id="' + g.id + '">Open</button>'
-      : (missing > 0
-        ? '<button class="btn sm" data-act="join" data-id="' + g.id + '">I\'m in</button>'
-        : '<button class="btn sm ghost" data-go="game" data-id="' + g.id + '">Open</button>');
+    var btn;
+    if (mine)         btn = '<button class="btn sm ghost" data-go="game" data-id="' + g.id + '">Open</button>';
+    else if (left > 0)btn = '<button class="btn sm" data-act="join" data-id="' + g.id + '">I\'m in</button>';
+    else if (waiting) btn = '<button class="btn sm ghost" data-go="game" data-id="' + g.id + '">Waiting</button>';
+    else              btn = '<button class="btn sm ghost" data-act="wait" data-id="' + g.id + '">Waitlist</button>';
+
+    var bits = [s.name, v.far + " mi", g.cost ? money(myShare(g)) + " each" : "Free"];
+    if (g.repeats) bits.push("Every " + dowOf(g.day).toLowerCase());
+    if (g.beginners) bits.push("Beginners ok");
 
     return '<button class="gc ' + cls + '" data-go="game" data-id="' + g.id + '">' +
-      '<div class="top"><span class="kind">' + kind + '</span>' +
+      '<div class="top"><span class="kind">' + kind + "</span>" +
       '<span class="when">' + whenLabel(g.day) + " · " + g.time + "</span></div>" +
-      "<h3>" + g.title + "</h3>" +
-      '<div class="meta">' + cap(g.activity) + "<i></i>" + g.far + " miles<i></i>" +
-      (g.cost ? money(share(g)) + " each" : "Free") + "</div>" +
+      "<h3>" + s.emoji + " " + esc(g.title) + "</h3>" +
+      '<div class="meta">' + bits.join("<i></i>") + "</div>" +
       '<div class="foot"><div class="slots">' + pips + "</div>" +
       '<span class="count">' + g.players.length + "/" + g.need + "</span>" + btn + "</div></button>";
   }
-  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
   V.game = function (id) {
     var g = game(id);
     if (!g) return V.home();
-    var mine = inGame(g);
-    var missing = g.need - g.players.length;
-    var host = person(g.host);
+    var s = sp(g.sport), v = venue(g.venueId);
+    var mine = inGame(g), waiting = onList(g), left = spotsLeft(g);
+    var host = person(g.host) || { first:"the host" };
     var per = share(g);
 
     var pips = g.players.map(function (p) {
-      return '<span class="pip" style="background:' + (COLORS[p.ini] || "#5C6B62") + '">' + p.ini + "</span>";
-    }).join("");
-    if (missing > 0) pips += '<span class="pip empty">+</span>';
+      return '<span class="pip" style="background:' + (COLORS[p.ini] || "#5C6B62") + '">' + esc(p.ini) + "</span>";
+    }).join("") + (left > 0 ? '<span class="pip empty">+</span>' : "");
 
-    var names = g.players.map(function (p) { return p.id === "me" ? "you" : p.name; });
-    var who = names.length > 3
-      ? names.slice(0,3).join(", ") + " +" + (names.length - 3)
-      : names.slice(0,-1).join(", ") + (names.length > 1 ? " and " : "") + names[names.length-1];
+    /* roster with reliability — what makes a stranger safe to accept */
+    var roster = g.players.map(function (p) {
+      var pp = person(p.id);
+      var r = reliability(pp);
+      var lvl = pp && pp.levels && pp.levels[g.sport] ? '<span class="tag">' + esc(pp.levels[g.sport]) + "</span>" : "";
+      return '<div class="lr">' + avatar(p.ini, "sm") +
+        '<span class="name">' + esc(p.id === "me" ? "You" : p.name) +
+        (g.host === p.id ? " · host" : "") + "</span>" + lvl +
+        '<span class="rep ' + r.cls + '">' + r.txt + "</span></div>";
+    }).join("");
+
+    /* sides, for sports that have them */
+    var teams = "";
+    if (s.shape === "sides" && g.players.length) {
+      var a = [], b = [];
+      g.players.forEach(function (p, i) { (i % 2 ? b : a).push(p.name); });
+      teams = '<div class="block"><span class="bh">Sides · ' + s.sides.perSide + " a side</span>" +
+        '<div class="lr"><span class="name">Bibs</span><b>' + esc(a.join(", ") || "—") + "</b></div>" +
+        '<div class="lr"><span class="name">Non-bibs</span><b>' + esc(b.join(", ") || "—") + "</b></div>" +
+        '<p class="note left">Sides rebalance automatically as people join and drop out.</p></div>';
+    }
+
+    var waitBlock = g.waitlist.length
+      ? '<div class="block"><span class="bh">Waitlist · first in, first on</span>' +
+        g.waitlist.map(function (wid, i) {
+          var pp = person(wid);
+          return '<div class="lr">' + avatar(pp.ini, "sm") +
+            '<span class="name">' + esc(wid === "me" ? "You" : pp.name) + "</span>" +
+            '<span class="tag">#' + (i + 1) + "</span></div>";
+        }).join("") +
+        '<p class="note left">If someone drops out, the top of the list is in automatically. Nobody has to ask.</p></div>'
+      : "";
+
+    /* money — the honest version: the host is the one out of pocket.
+       Cost comes from the GAME, not the sport: park cricket is free, nets are £24. */
+    var costBlock = "";
+    if (g.cost > 0) {
+      var owedToHost = g.players.filter(function (p) { return g.paid.indexOf(p.id) === -1; }).length * per;
+      costBlock = '<div class="block"><span class="bh">Cost</span>' +
+        '<div class="lr"><span class="name">' + esc(g.court) + " hire</span><b>" + money(g.cost) + "</b></div>" +
+        '<div class="lr"><span class="name">Split ' + plural(g.players.length, "way") + "</span><b>" + money(per) + " each</b></div>" +
+        (g.hostPaid && owedToHost > 0
+          ? '<div class="lr total"><span class="name">' + esc(g.host === "me" ? "You are" : host.first + " is") +
+            ' out of pocket</span><b style="color:var(--amber)">' + money(owedToHost) + "</b></div>"
+          : '<div class="lr total"><span class="name">' + (mine ? "You pay" : "You'd pay") + "</span><b>" + money(myShare(g)) + "</b></div>") +
+        "</div>";
+    }
 
     var payBlock = "";
     if (g.cost > 0 && g.booked) {
       payBlock = '<div class="block"><span class="bh">Who\'s paid · ' + money(per) + " each</span>" +
         g.players.map(function (p) {
           var paid = g.paid.indexOf(p.id) !== -1;
-          var label = p.id === "me" ? "You" : p.name;
-          var right;
-          if (paid) right = '<b style="color:var(--court)">Paid ✓</b>';
-          else if (p.id === "me") right = '<button class="btn sm green" data-act="pay" data-id="' + g.id + '">Pay ' + money(per) + "</button>";
-          else right = '<span style="color:var(--ink-3)">Waiting</span>';
+          var right = paid ? '<b style="color:var(--court)">Paid ✓</b>'
+            : p.id === "me" ? '<button class="btn sm green" data-act="pay" data-id="' + g.id + '">Pay ' + money(per) + "</button>"
+            : '<span style="color:var(--ink-3)">Waiting</span>';
           return '<div class="lr">' + avatar(p.ini, "sm") +
-            '<span style="flex:1; margin-left:2px">' + esc(label) + "</span>" + right + "</div>";
-        }).join("") + "</div>";
+            '<span class="name">' + esc(p.id === "me" ? "You" : p.name) + "</span>" + right + "</div>";
+        }).join("") +
+        (g.host === "me"
+          ? '<button class="btn sm ghost" data-act="nudge" data-id="' + g.id + '" style="width:100%">Nudge whoever hasn\'t paid</button>'
+          : '<p class="note left">' + esc(host.first) + " paid the venue up front. We don't hold your money — this just pays them back.</p>") +
+        "</div>";
     }
 
-    var bookRow = g.cost === 0
-      ? '<div class="link done"><div>Free to play<small>' + g.venue + " · no booking needed</small></div><span class=\"arw\">✓</span></div>"
-      : (g.booked
-        ? '<div class="link done"><div>Booked ✓<small>' + g.venue + " · " + g.court + "</small></div><span class=\"arw\">✓</span></div>"
-        : '<button class="link" data-act="book" data-id="' + g.id + '"><div>Book it at ' + g.venue.split(",")[0] +
-          "<small>Opens their site — we don't take bookings</small></div><span class=\"arw\">↗</span></button>");
+    var bookRow;
+    if (g.cost === 0) {
+      bookRow = '<div class="link done"><span class="ic">✓</span><div style="flex:1">Free to play' +
+        "<small>" + esc(v.name) + " · no booking, no money</small></div></div>";
+    } else if (g.booked) {
+      bookRow = '<div class="link done"><span class="ic">✓</span><div style="flex:1">Booked' +
+        "<small>" + esc(v.name) + " · " + esc(g.court) + "</small></div></div>";
+    } else {
+      bookRow = '<button class="link" data-act="book" data-id="' + g.id + '"><span class="ic">📍</span>' +
+        '<div style="flex:1">Book it at ' + esc(v.name) +
+        "<small>Opens their site — we don't take bookings</small></div><span class=\"arw\">↗</span></button>";
+    }
 
-    var chatCount = g.msgs.length;
+    var weatherRow = (s.weather && !g.cancelled)
+      ? '<button class="link warn" data-act="weather" data-id="' + g.id + '"><span class="ic">🌧</span>' +
+        '<div style="flex:1">Outdoor game<small>If it\'s off, one tap tells all ' + g.players.length + ' of them at once</small></div></button>'
+      : "";
 
-    return nav({ title:g.title.length > 26 ? cap(g.activity) : g.title, sub:whenLabel(g.day) + " · " + g.time, back:true }) +
+    var cancelled = g.cancelled
+      ? '<div class="link warn"><span class="ic">🌧</span><div style="flex:1">Called off<small>Everyone was told the moment it was called</small></div></div>'
+      : "";
+
+    return nav({ title:s.emoji + " " + g.title,
+        sub:whenLabel(g.day) + " · " + g.time + (g.repeats ? " · every " + dowOf(g.day).toLowerCase() : ""),
+        back:true, action:{ act:"share", id:g.id, label:"Share" } }) +
       "<main>" +
-      '<div class="block"><span class="bh">' + cap(g.activity) + " · hosted by " + (g.host === "me" ? "you" : host.first) + "</span>" +
-      '<div class="lr" style="font-size:14px"><span>' + g.venue + "</span><b>" + g.far + " mi</b></div>" +
-      (g.note ? '<p class="copy" style="font-size:13px">' + g.note + "</p>" : "") + "</div>" +
+      cancelled +
+      '<div class="block"><span class="bh">' + s.name + " · hosted by " + esc(g.host === "me" ? "you" : host.first) +
+      (g.repeats ? " · repeats weekly" : "") + "</span>" +
+      '<div class="lr" style="font-size:14px"><span class="name">' + esc(v.name) + "</span><b>" + v.far + " mi</b></div>" +
+      '<div class="taglist">' +
+      (g.beginners ? '<span class="tag new">Beginners welcome</span>' : "") +
+      (g.level !== "any" ? '<span class="tag">' + esc(g.level) + " and up</span>" : "") +
+      '<span class="tag">' + s.duration + " min</span><span class=\"tag\">" + cap(s.setting) + "</span>" +
+      (s.season !== "year-round" ? '<span class="tag">' + cap(s.season) + "</span>" : "") + "</div>" +
+      (g.note ? '<p class="copy" style="font-size:13px">' + esc(g.note) + "</p>" : "") + "</div>" +
 
-      '<div class="block"><span class="bh">Playing</span>' +
-      '<div class="slots" style="padding:2px 0 2px">' + pips + "</div>" +
-      '<div class="lr"><span>' + who + "</span><b>" + g.players.length + "/" + g.need + "</b></div></div>" +
+      '<div class="block"><span class="bh">Playing · ' + g.players.length + " of " + g.need + "</span>" +
+      '<div class="slots" style="padding:2px 0">' + pips + "</div>" + roster +
+      (g.regulars.length
+        ? '<p class="note left">' + plural(g.regulars.length, "regular") + ". " +
+          (g.out.length ? g.out.map(function (o) { return esc((person(o) || {}).first || "Someone"); }).join(", ") +
+            " can't make it this week." : "Everyone's answered.") + "</p>"
+        : "") + "</div>" +
 
-      (g.cost > 0
-        ? '<div class="block"><span class="bh">Cost</span>' +
-          '<div class="lr"><span>' + g.court + " hire</span><b>" + money(g.cost) + "</b></div>" +
-          '<div class="lr"><span>Split ' + g.players.length + " way" + (g.players.length===1?"":"s") + "</span><b>" + money(per) + " each</b></div>" +
-          '<div class="lr total"><span>' + (mine ? "You pay" : "You'd pay") + "</span><b>" +
-          money(g.cost / Math.max(g.players.length + (mine ? 0 : 1), 1)) + "</b></div></div>"
-        : "") +
+      teams + waitBlock + costBlock + bookRow + weatherRow + payBlock +
 
-      bookRow +
-      payBlock +
+      '<button class="link" data-go="gchat" data-id="' + g.id + '"><span class="ic">💬</span>' +
+      '<div style="flex:1">Chat<small>' +
+      (g.msgs.length ? plural(g.msgs.length, "message") : "No messages yet") + "</small></div><span class=\"arw\">›</span></button>" +
 
-      '<button class="link" data-go="gchat" data-id="' + g.id + '"><div>Chat<small>' +
-      (chatCount ? chatCount + " message" + (chatCount===1?"":"s") : "No messages yet") + "</small></div><span class=\"arw\">›</span></button>" +
+      '<button class="link" data-go="sport" data-id="' + g.sport + '"><span class="ic">' + s.emoji + "</span>" +
+      '<div style="flex:1">New to ' + s.name.toLowerCase() + "?<small>Rules, kit, and " +
+      (s.guides.length ? plural(s.guides.length, "short video") : "where to play") + "</small></div><span class=\"arw\">›</span></button>" +
 
+      (mine && g.repeats && !isRegular(g)
+        ? '<button class="btn ghost" data-act="regular" data-id="' + g.id + '">Make me a regular</button>' : "") +
       (mine ? '<button class="btn flat" data-act="leave" data-id="' + g.id + '">Leave this game</button>' : "") +
       "</main>" +
 
       '<div class="cta">' +
-      (g.cost > 0 ? '<div class="price">Your share<b>' + money(g.cost / Math.max(g.players.length + (mine ? 0 : 1), 1)) + "</b></div>" : "") +
-      (mine
-        ? '<button class="btn green" disabled>You\'re in ✓</button>'
-        : (missing > 0
-          ? '<button class="btn" data-act="join" data-id="' + g.id + '">I\'m in</button>'
-          : '<button class="btn ghost" disabled>Game is full</button>')) +
+      (g.cost > 0 ? '<div class="price">Your share<b>' + money(myShare(g)) + "</b></div>" : "") +
+      (mine ? '<button class="btn green" disabled>You\'re in ✓</button>'
+        : left > 0 ? '<button class="btn" data-act="join" data-id="' + g.id + '">I\'m in</button>'
+        : waiting ? '<button class="btn amber" data-act="unwait" data-id="' + g.id + '">On the waitlist · leave</button>'
+        : '<button class="btn dark" data-act="wait" data-id="' + g.id + '">Join the waitlist</button>') +
       "</div>";
   };
 
@@ -737,100 +1000,305 @@
     var g = game(id);
     if (!g) return V.home();
     var msgs = g.msgs.map(function (m) {
+      if (m.sys) return '<div class="msg sys">' + esc(m.text) + "</div>";
       var mine = m.from === "me";
-      var p = mine ? null : person(m.from);
+      var p = person(m.from);
       return '<div class="msg' + (mine ? " me" : "") + '">' +
-        (mine ? "" : '<span class="who">' + (p ? p.first : "Someone") + "</span>") +
-        esc(m.text) + '<span class="t">' + agoLabel(m.ago) + " ago</span></div>";
+        (mine ? "" : '<span class="who">' + esc(p ? p.first : "Someone") + "</span>") + esc(m.text) + "</div>";
     }).join("");
     return nav({ title:"Chat", sub:g.title, back:true }) +
-      '<main id="thread"><div class="thread">' + (msgs || '<p class="demo-note">No messages yet. Say something.</p>') + "</div></main>" +
+      '<main id="thread"><div class="thread">' + (msgs || '<p class="note">No messages yet. Say something.</p>') + "</div></main>" +
       '<form class="composer" data-form="gmsg" data-id="' + g.id + '">' +
-      '<input id="gmsg" type="text" placeholder="Message the group…" autocomplete="off">' +
-      '<button type="submit">Send</button></form>';
+      '<input type="text" placeholder="Message the group…" autocomplete="off"><button type="submit">Send</button></form>';
   };
 
+  /* THE POST FORM CHANGES SHAPE PER SPORT — the schema proving itself */
   V.post = function () {
-    var d = S.post;
-    var plays = S.user.plays;
-    return nav({ title:"Post a game", sub:"Takes about 20 seconds" }) +
+    var live = myLiveSports();
+    if (!live.length) {
+      return nav({ title:"Post a game", back:true }) +
+        '<main><div class="empty"><div class="mark">+</div><h3>Nothing live yet</h3>' +
+        "<p>None of your sports are switched on near you. Add your name in Sports — they open when enough people want them.</p>" +
+        '<button class="btn" data-go="sports">See sports</button></div></main>';
+    }
+    var d = S.post, s = sp(d.sport), vs = venuesFor(d.sport);
+
+    /* the players field is a different question for every shape of sport */
+    var playersField;
+    if (s.shape === "fixed") {
+      playersField = '<div class="field"><label>Players</label>' +
+        '<input type="text" value="' + s.players.ideal + ", always" + '" disabled>' +
+        '<span class="hint">' + s.name + " is always " + s.players.ideal + ". Nothing to decide.</span></div>";
+    } else if (s.shape === "sides") {
+      playersField = '<div class="field"><label for="p-need">Format</label><select id="p-need">' +
+        [5, 6, 7, 11].map(function (n) {
+          return '<option value="' + (n * 2) + '"' + (d.need === n * 2 ? " selected" : "") + ">" +
+            n + " a side · " + (n * 2) + " players</option>";
+        }).join("") + "</select>" +
+        '<span class="hint">Sides get balanced automatically as people join.</span></div>';
+    } else {
+      playersField = '<div class="field"><label for="p-need">Players needed</label>' +
+        '<input id="p-need" type="number" min="' + s.players.min + '" max="' + s.players.max + '" value="' + d.need + '">' +
+        '<span class="hint">' + s.name + " works with anything from " + s.players.min + " to " + s.players.max + ".</span></div>";
+    }
+
+    /* cost follows the VENUE, not the sport — a park is free, the nets are £24 */
+    var chosen = venue(d.venueId);
+    var costField = chosen.price === 0
+      ? '<div class="field"><label>Cost</label><input type="text" value="Free — public space" disabled>' +
+        "<span class=\"hint\">" + esc(chosen.name) + " costs nothing and needs no booking. That's half the appeal.</span></div>"
+      : '<div class="field"><label for="p-cost">' + (s.shape === "sides" ? "Pitch" : "Court") + " cost (£)</label>" +
+        '<input id="p-cost" type="number" min="0" step="1" value="' + d.cost + '">' +
+        '<span class="hint">' + esc(chosen.name) + " is about £" + chosen.price + " per " + (chosen.unit || "session") +
+        ". You pay them up front; everyone pays <b>you</b> back. We never hold the money.</span></div>";
+
+    var levelField = s.levels
+      ? '<div class="field"><label>Level</label><div class="chips">' +
+        ["any"].concat(s.levelNames).map(function (l) {
+          return '<button class="chip" data-act="post-level" data-v="' + l + '" aria-pressed="' + (d.level === l) + '">' +
+            (l === "any" ? "Any level" : l + " and up") + "</button>";
+        }).join("") + "</div>" +
+        '<span class="hint">In racket sports this matters more than people like to admit.</span></div>'
+      : "";
+
+    var weatherNote = s.weather
+      ? '<p class="note left" style="color:var(--amber)">🌧 Outdoor game. You\'ll get a one-tap "it\'s off" button that tells everyone at once.</p>'
+      : "";
+
+    return nav({ title:"Post a game", sub:"About twenty seconds", back:true }) +
       "<main>" +
-      '<div class="chips">' + plays.map(function (a) {
-        return '<button class="chip" data-act="post-act" data-id="' + a + '" aria-pressed="' + (d.activity === a) + '">' +
-          (a === "cricket" ? "🏏 Cricket" : "🏸 Badminton") + "</button>";
+      '<div class="chips">' + live.map(function (id) {
+        return '<button class="chip" data-act="post-sport" data-id="' + id + '" aria-pressed="' + (d.sport === id) + '">' +
+          sp(id).emoji + " " + sp(id).name + "</button>";
       }).join("") + "</div>" +
-      '<div class="field"><label for="p-title">What is it?</label><input id="p-title" type="text" value="' + esc(d.title) + '" placeholder="Friday doubles"></div>' +
+
+      '<div class="field"><label for="p-title">What is it?</label>' +
+      '<input id="p-title" type="text" value="' + esc(d.title) + '" placeholder="Friday doubles"></div>' +
+
       '<div class="two">' +
       '<div class="field"><label for="p-day">Day</label><select id="p-day">' +
-      [0,1,2,3,4,5,6].map(function (i) {
+      [0, 1, 2, 3, 4, 5, 6].map(function (i) {
         var dt = new Date(); dt.setDate(dt.getDate() + i + 1);
         return '<option value="' + i + '"' + (d.day === i ? " selected" : "") + ">" +
           (i === 0 ? "Tomorrow" : DAYS[dt.getDay()]) + "</option>";
       }).join("") + "</select></div>" +
       '<div class="field"><label for="p-time">Time</label><select id="p-time">' +
-      ["10:00am","12:00pm","2:00pm","5:30pm","6:30pm","7:00pm","8:00pm"].map(function (t) {
-        return '<option' + (d.time === t ? " selected" : "") + ">" + t + "</option>";
+      ["9:00am", "10:00am", "12:00pm", "2:00pm", "5:30pm", "6:30pm", "7:00pm", "8:00pm"].map(function (t) {
+        return "<option" + (d.time === t ? " selected" : "") + ">" + t + "</option>";
       }).join("") + "</select></div></div>" +
+
       '<div class="field"><label for="p-venue">Where</label><select id="p-venue">' +
-      ["Active Wigston, Station Rd","Aylestone Leisure Centre","Evington Park, Leicester","Grace Road nets, Leicester","Braunstone Leisure Centre"].map(function (v) {
-        return '<option' + (d.venue === v ? " selected" : "") + ">" + v + "</option>";
-      }).join("") + "</select></div>" +
-      '<div class="two">' +
-      '<div class="field"><label for="p-need">Players needed</label><input id="p-need" type="number" min="2" max="22" value="' + d.need + '"></div>' +
-      '<div class="field"><label for="p-cost">Court cost (£)</label><input id="p-cost" type="number" min="0" step="1" value="' + d.cost + '"></div></div>' +
-      '<div class="field"><label for="p-note">Anything else?</label><textarea id="p-note" placeholder="Beginners welcome, we\'re not serious">' + esc(d.note) + "</textarea></div>" +
-      '<div class="reach">This goes to <b>' + (NEARBY[d.activity] || 0) + " people</b> within " + S.user.radius +
-      " miles who play " + d.activity + " — including <b>" + Math.round((NEARBY[d.activity] || 0) * 0.29) +
-      "</b> who've never played with anyone on Hangout yet.</div>" +
-      '<button class="btn" data-act="post-it">Post it</button>' +
-      "</main>" + tabs("post");
+      vs.map(function (v) {
+        return '<option value="' + v.id + '"' + (d.venueId === v.id ? " selected" : "") + ">" +
+          esc(v.name) + " · " + v.far + " mi · " + (v.price ? "£" + v.price : "free") + "</option>";
+      }).join("") + "</select>" +
+      '<span class="hint">We know <b>' + plural(vs.length, "place") + "</b> near you that do " + s.name.toLowerCase() +
+      " — before we knew a single player.</span></div>" +
+
+      playersField + costField + levelField +
+
+      '<button class="pick" data-act="post-repeat" aria-pressed="' + d.repeats + '">' +
+      '<span class="ico">🔁</span><span class="t"><b>Repeats every week</b>' +
+      "<span>Most real sport is a standing fixture. We'll ask your regulars in or out, every week.</span></span>" +
+      '<span class="tick">✓</span></button>' +
+
+      '<button class="pick" data-act="post-beginners" aria-pressed="' + d.beginners + '">' +
+      '<span class="ico">🌱</span><span class="t"><b>Beginners welcome</b>' +
+      "<span>The flag that gets a nervous person to actually turn up</span></span>" +
+      '<span class="tick">✓</span></button>' +
+
+      '<div class="field"><label for="p-note">Anything else?</label>' +
+      '<textarea id="p-note" placeholder="Beginners welcome, we\'re not serious">' + esc(d.note) + "</textarea></div>" +
+
+      weatherNote +
+
+      '<div class="reach">This goes to <b>' + plural(S.demand[d.sport] || 0, "person", "people") + "</b> within " +
+      S.user.radius + " miles who play " + s.name.toLowerCase() + " — including <b>" +
+      Math.max(1, Math.round((S.demand[d.sport] || 0) * 0.29)) + "</b> who've never played with anyone on Hangout yet.</div>" +
+
+      '<button class="btn" data-act="post-it">Post it</button></main>';
+  };
+
+  /* SPORTS TAB — what's live, and the demand board for everything that isn't */
+  V.sports = function () {
+    var live = sportIds().filter(isLive);
+    var locked = sportIds().filter(function (id) { return !isLive(id); })
+      .sort(function (a, b) { return (S.demand[b] / sp(b).threshold) - (S.demand[a] / sp(a).threshold); });
+
+    return nav({ title:"Sports", sub:"Near " + esc(S.user.pc) }) + "<main>" +
+      '<h2 class="sec">Live near you<span class="rule"></span></h2>' +
+      live.map(function (id) {
+        var s = sp(id);
+        var n = S.games.filter(function (g) { return g.sport === id; }).length;
+        return '<button class="stile" data-go="sport" data-id="' + id + '">' +
+          '<span class="ico">' + s.emoji + '</span><span class="t"><b>' + s.name + "</b><span>" +
+          plural(S.demand[id], "player") + " · " + plural(n, "game") + " · " + plural(venuesFor(id).length, "venue") +
+          "</span></span><span class=\"arw\">›</span></button>";
+      }).join("") +
+
+      '<h2 class="sec">Waiting to open<span class="rule"></span></h2>' +
+      '<p class="copy" style="font-size:12.5px">A sport only switches on when enough people near you want it. Four padel players in ten miles isn\'t a sport, it\'s an empty court. <b>Add your name and it counts.</b></p>' +
+
+      locked.map(function (id) {
+        var s = sp(id), d = S.demand[id], t = s.threshold;
+        var pct = Math.min(100, Math.round(d / t * 100));
+        var want = S.wanted.indexOf(id) !== -1;
+        var togo = t - d;
+        return '<div class="stile locked">' +
+          '<div class="head"><span class="ico">' + s.emoji + "</span>" +
+          '<span class="t"><b>' + s.name + "</b><span>" + d + " of " + t + " people near " + esc(S.user.pc) +
+          " · " + plural(venuesFor(id).length, "venue") + " ready</span></span>" +
+          (want ? '<span class="tag new">You\'re counted</span>'
+                : '<button class="btn sm dark" data-act="want" data-id="' + id + '">I want this</button>') +
+          "</div>" +
+          '<span class="meter' + (pct > 80 ? " close" : "") + '"><i style="width:' + pct + '%"></i></span>' +
+          (togo === 1 && !want
+            ? '<p class="note left" style="color:var(--amber); font-weight:700">One more person and ' + s.name.toLowerCase() + " opens here.</p>"
+            : "") + "</div>";
+      }).join("") +
+
+      '<p class="note" style="margin-top:8px">Demand first, then supply. It\'s also how we know which sport to open next, and exactly where.</p>' +
+      "</main>" + tabs("sports");
+  };
+
+  V.sport = function (id) {
+    var s = sp(id);
+    if (!s) return V.sports();
+    var live = isLive(id);
+    var gs = S.games.filter(function (g) { return g.sport === id; });
+    var vs = venuesFor(id);
+    var players = PEOPLE.filter(function (p) { return p.plays.indexOf(id) !== -1; });
+    var togo = s.threshold - S.demand[id];
+
+    var shape = s.shape === "fixed" ? s.players.ideal + " players, always"
+      : s.shape === "sides" ? s.sides.perSide + " a side · " + (s.sides.n * s.sides.perSide) + " players"
+      : s.players.min + " to " + s.players.max + " players";
+
+    return nav({ title:s.emoji + " " + s.name,
+        sub:live ? "Live near you" : S.demand[id] + " of " + s.threshold + " people needed", back:true }) +
+      "<main>" +
+      '<div class="block"><span class="bh">The shape of the game</span>' +
+      '<div class="lr"><span class="name">Players</span><b>' + shape + "</b></div>" +
+      '<div class="lr"><span class="name">Where</span><b>' + (s.venue === "free" ? "Public space" : "Booked venue") + "</b></div>" +
+      '<div class="lr"><span class="name">Cost near you</span><b>' + costRange(vs) + "</b></div>" +
+      '<div class="lr"><span class="name">Session</span><b>' + s.duration + " min · " + s.setting + "</b></div>" +
+      '<div class="lr"><span class="name">Season</span><b>' + cap(s.season) + "</b></div>" +
+      (s.levels ? '<div class="lr"><span class="name">Level matters</span><b>Yes — we match you</b></div>' : "") +
+      "</div>" +
+
+      (live && gs.length ? '<h2 class="sec">Games<span class="rule"></span></h2>' + gs.map(card).join("") : "") +
+
+      (!live
+        ? '<div class="reach">' + s.name + " isn't open here yet — <b>" + togo + "</b> more " +
+          (togo === 1 ? "person" : "people") + " and it goes live. We already know <b>" +
+          plural(vs.length, "place") + "</b> you could play.<br>" +
+          (S.wanted.indexOf(id) === -1
+            ? '<button class="btn" data-act="want" data-id="' + id + '">I want this</button>'
+            : '<span style="opacity:.8">You\'re counted. We\'ll tell you the moment it opens.</span>') + "</div>"
+        : "") +
+
+      '<h2 class="sec">Where you can play<span class="rule"></span></h2>' +
+      '<p class="copy" style="font-size:12.5px">We know these before we know anyone. It\'s why the app is never truly empty.</p>' +
+      vs.map(function (v) {
+        return '<button class="link" data-act="venue" data-id="' + v.id + '"><div style="flex:1">' + esc(v.name) +
+          "<small>" + esc(v.area) + " · " + v.far + " mi · " +
+          (v.price ? "£" + v.price + " per " + v.unit : "free") + "</small></div><span class=\"arw\">↗</span></button>";
+      }).join("") +
+
+      '<h2 class="sec">What to bring<span class="rule"></span></h2>' +
+      '<div class="block">' + s.kit.map(function (k) {
+        return '<div class="lr"><span class="name">' + esc(k) + "</span></div>";
+      }).join("") + "</div>" +
+
+      (s.guides.length
+        ? '<h2 class="sec">Never played?<span class="rule"></span></h2>' +
+          s.guides.map(function (v) {
+            return '<button class="vid" data-act="video"><span class="play">▶</span>' +
+              '<span class="t"><b>' + esc(v.t) + "</b><span>" + esc(v.by) + " · " + v.len + "</span></span></button>";
+          }).join("")
+        : "") +
+
+      (live && players.length
+        ? '<h2 class="sec">' + plural(players.length, "person", "people") + " play this near you<span class=\"rule\"></span></h2>" +
+          players.slice(0, 5).map(function (p) {
+            return '<button class="row" data-go="person" data-id="' + p.id + '">' + avatar(p.ini) +
+              '<span class="t"><b>' + esc(p.name) + "</b><span>" + esc(p.levels[id] || "Any level") +
+              " · turned up " + reliability(p).txt + "</span></span>" +
+              '<span class="far">' + p.far + " mi</span></button>";
+          }).join("")
+        : "") +
+      "</main>";
   };
 
   V.people = function () {
-    var filt = S.peopleFilter || "all";
+    var live = myLiveSports();
+    var filt = S.peopleFilter;
+    if (filt !== "all" && live.indexOf(filt) === -1) filt = "all";
     var list = PEOPLE.filter(function (p) {
-      if (filt === "all") return p.plays.some(function (a) { return S.user.plays.indexOf(a) !== -1; });
-      return p.plays.indexOf(filt) !== -1;
+      return filt === "all"
+        ? p.plays.some(function (a) { return live.indexOf(a) !== -1; })
+        : p.plays.indexOf(filt) !== -1;
     }).sort(function (a, b) { return a.far - b.far; });
 
-    var counts = S.user.plays.map(function (a) { return NEARBY[a] + " play " + a; }).join(" · ");
-
-    return nav({ title:"People near you", sub:counts }) +
+    return nav({ title:"People near you",
+        sub:live.map(function (id) { return S.demand[id] + " play " + sp(id).name.toLowerCase(); }).join(" · ") }) +
       "<main>" +
-      '<div class="chips"><button class="chip" data-act="pfilter" data-id="all" aria-pressed="' + (filt==="all") + '">Everyone</button>' +
-      S.user.plays.map(function (a) {
-        return '<button class="chip" data-act="pfilter" data-id="' + a + '" aria-pressed="' + (filt===a) + '">' +
-          (a === "cricket" ? "🏏 Cricket" : "🏸 Badminton") + "</button>";
+      '<div class="chips"><button class="chip" data-act="pfilter" data-id="all" aria-pressed="' + (filt === "all") + '">Everyone</button>' +
+      live.map(function (id) {
+        return '<button class="chip" data-act="pfilter" data-id="' + id + '" aria-pressed="' + (filt === id) + '">' +
+          sp(id).emoji + " " + sp(id).name + "</button>";
       }).join("") + "</div>" +
+
       '<div style="display:flex; flex-direction:column">' +
       list.map(function (p) {
+        var r = reliability(p);
+        var lv = p.plays.filter(function (a) { return live.indexOf(a) !== -1; })
+          .map(function (a) { return sp(a).emoji + (p.levels[a] ? " " + p.levels[a] : ""); }).join("   ");
         return '<button class="row" data-go="person" data-id="' + p.id + '">' + avatar(p.ini) +
-          '<span class="t"><b>' + p.name + "</b><span>" + p.blurb + "</span>" +
-          (p.tag ? '<span class="tag' + (p.tagNew ? " new" : "") + '">' + p.tag + "</span>" : "") + "</span>" +
+          '<span class="t"><b>' + esc(p.name) + "</b><span>" + esc(lv) + "</span>" +
+          '<span class="taglist">' +
+          (p.tag ? '<span class="tag' + (p.tagNew ? " new" : "") + '">' + esc(p.tag) + "</span>" : "") +
+          '<span class="rep ' + r.cls + '">' + r.txt + "</span></span></span>" +
           '<span class="far">' + p.far + " mi</span></button>";
       }).join("") + "</div>" +
-      '<p class="demo-note" style="margin-top:8px">Distances are rounded. We never show an address or a map pin.</p>' +
+      '<p class="note" style="margin-top:8px">The number by each name is games turned up to. No-shows are the one thing that kills a group — so we make them visible.</p>' +
       "</main>" + tabs("people");
   };
 
   V.person = function (id) {
     var p = person(id);
     if (!p) return V.people();
-    var theirs = S.games.filter(function (g) {
-      return g.players.some(function (x) { return x.id === p.id; });
-    });
+    var r = reliability(p);
+    var theirs = S.games.filter(function (g) { return g.players.some(function (x) { return x.id === p.id; }); });
     return nav({ title:p.name, sub:p.far + " miles away", back:true }) +
       "<main>" +
-      '<div class="phead">' + avatar(p.ini) + "<b>" + p.name + "</b><span>" + p.far + " miles · " + (p.tag || "Plays locally") + "</span></div>" +
-      '<div class="chips" style="justify-content:center; margin:4px 0 6px">' +
-      p.plays.map(function (a) { return '<span class="chip" aria-pressed="true">' + (a==="cricket"?"🏏 Cricket":"🏸 Badminton") + "</span>"; }).join("") + "</div>" +
-      (theirs.length ? '<h2 class="sec">Games they\'re in</h2>' + theirs.map(function (g) {
-        return '<button class="link" data-go="game" data-id="' + g.id + '"><div>' + g.title +
-          "<small>" + whenLabel(g.day) + " · " + g.time + " · " + g.venue.split(",")[0] + "</small></div><span class=\"arw\">›</span></button>";
-      }).join("") : '<p class="copy">Not in any games right now.</p>') +
+      '<div class="phead">' + avatar(p.ini) + "<b>" + esc(p.name) + "</b>" +
+      "<span>" + p.far + " miles · " + esc(p.tag || "Plays locally") + "</span></div>" +
+
+      '<div class="stats"><div><b>' + p.record.played + "</b><span>TURNED UP</span></div>" +
+      "<div><b>" + p.record.missed + "</b><span>NO-SHOWS</span></div>" +
+      '<div><b style="color:' + (r.cls === "low" ? "var(--amber)" : "var(--court)") + '">' + r.txt + "</b><span>RECORD</span></div></div>" +
+      (r.cls === "low"
+        ? '<p class="note left" style="color:var(--amber)">Misses more games than most. Worth knowing before you save them the last spot.</p>'
+        : "") +
+
+      '<h2 class="sec">Plays<span class="rule"></span></h2>' +
+      '<div class="block">' + p.plays.map(function (a) {
+        return '<div class="lr"><span class="name">' + sp(a).emoji + " " + sp(a).name + "</span><b>" +
+          (isLive(a) ? esc(p.levels[a] || "Any level")
+            : '<span style="color:var(--amber)">not open here yet</span>') + "</b></div>";
+      }).join("") + "</div>" +
+
+      (theirs.length
+        ? '<h2 class="sec">Games they\'re in<span class="rule"></span></h2>' + theirs.map(function (g) {
+            return '<button class="link" data-go="game" data-id="' + g.id + '"><div style="flex:1">' +
+              sp(g.sport).emoji + " " + esc(g.title) + "<small>" + whenLabel(g.day) + " · " + g.time + " · " +
+              esc(venue(g.venueId).name) + "</small></div><span class=\"arw\">›</span></button>";
+          }).join("")
+        : "") +
+
       '<div style="flex:1; min-height:12px"></div>' +
-      '<button class="btn" data-go="chat" data-id="' + p.id + '">Say hello</button>' +
-      "</main>";
+      '<button class="btn" data-go="chat" data-id="' + p.id + '">Say hello</button></main>';
   };
 
   V.chats = function () {
@@ -842,13 +1310,11 @@
         '<button class="btn" data-go="people">See who\'s nearby</button></div></main>' + tabs("chats");
     }
     ids.sort(function (a, b) { return S.chats[b].at - S.chats[a].at; });
-    return nav({ title:"Chats" }) + "<main>" +
-      '<div style="display:flex; flex-direction:column">' +
+    return nav({ title:"Chats" }) + '<main><div style="display:flex; flex-direction:column">' +
       ids.map(function (id) {
         var p = person(id), c = S.chats[id], last = c.msgs[c.msgs.length - 1];
         return '<button class="row" data-go="chat" data-id="' + id + '">' + avatar(p.ini) +
-          '<span class="t"><b>' + p.name + "</b><span>" +
-          (last.me ? "You: " : "") + esc(last.text) + "</span></span>" +
+          '<span class="t"><b>' + esc(p.name) + "</b><span>" + (last.me ? "You: " : "") + esc(last.text) + "</span></span>" +
           (c.unread ? '<span class="dot"></span>' : '<span class="far">' + p.far + " mi</span>") + "</button>";
       }).join("") + "</div></main>" + tabs("chats");
   };
@@ -862,66 +1328,72 @@
       return '<div class="msg' + (m.me ? " me" : "") + '">' + esc(m.text) + "</div>";
     }).join("");
     var starter = S.chats[id].msgs.length ? "" :
-      '<p class="demo-note" style="margin-top:20px">Say hello to ' + p.first + ". They play " +
-      p.plays.join(" and ") + ", " + p.far + " miles from you.</p>";
-    return nav({ title:p.name, sub:p.far + " miles · " + (p.tag || "Plays locally"), back:true }) +
+      '<p class="note" style="margin-top:20px">Say hello to ' + esc(p.first) + ". They play " +
+      p.plays.map(function (a) { return sp(a).name.toLowerCase(); }).join(" and ") + ", " + p.far + " miles from you.</p>";
+    return nav({ title:p.name, sub:p.far + " miles · turned up " + reliability(p).txt, back:true }) +
       '<main id="thread">' + starter + '<div class="thread">' + msgs + "</div></main>" +
       '<form class="composer" data-form="msg" data-id="' + id + '">' +
-      '<input id="msg" type="text" placeholder="Message ' + p.first + '…" autocomplete="off">' +
-      '<button type="submit">Send</button></form>';
+      '<input type="text" placeholder="Message ' + esc(p.first) + '…" autocomplete="off"><button type="submit">Send</button></form>';
   };
 
   V.you = function () {
     var u = S.user;
-    var mine = myGames();
+    var mine = S.games.filter(inGame);
     var played = {};
     mine.forEach(function (g) { g.players.forEach(function (p) { if (p.id !== "me") played[p.id] = 1; }); });
     var hosted = S.games.filter(function (g) { return g.host === "me"; }).length;
+    var r = reliability({ record:u.record });
 
     return nav({ title:"You" }) + "<main>" +
-      '<div class="phead">' + avatar(u.ini) + "<b>" + esc(u.name) + "</b><span>" +
-      u.pc + (u.isNew ? " · new to the area" : "") + "</span></div>" +
-      '<div class="chips" style="justify-content:center; margin:4px 0 8px">' +
-      u.plays.map(function (a) { return '<span class="chip" aria-pressed="true">' + (a==="cricket"?"🏏 Cricket":"🏸 Badminton") + "</span>"; }).join("") + "</div>" +
+      '<div class="phead">' + avatar(u.ini) + "<b>" + esc(u.name) + "</b>" +
+      "<span>" + esc(u.pc) + (u.isNew ? " · new to the area" : "") + "</span></div>" +
 
       '<div class="stats"><div><b>' + mine.length + "</b><span>GAMES</span></div>" +
       "<div><b>" + Object.keys(played).length + "</b><span>PLAYED WITH</span></div>" +
-      "<div><b>" + hosted + "</b><span>HOSTED</span></div></div>" +
+      "<div><b>" + hosted + "</b><span>HOSTED</span></div>" +
+      "<div><b>" + r.txt + "</b><span>RECORD</span></div></div>" +
 
-      (mine.length ? '<h2 class="sec">Your games</h2>' + mine.map(function (g) {
-        return '<button class="link" data-go="game" data-id="' + g.id + '"><div>' + g.title +
-          "<small>" + whenLabel(g.day) + " · " + g.time + " · " +
-          (g.cost ? money(share(g)) + " each" : "Free") + "</small></div><span class=\"arw\">›</span></button>";
-      }).join("") : '<p class="copy" style="margin-top:6px">You haven\'t joined a game yet. <b>Near you</b> has ' +
-        feed().filter(function(g){return g.players.length < g.need;}).length + " that need a player.</p>") +
+      '<h2 class="sec">Your sports<span class="rule"></span></h2>' +
+      '<div class="block">' + u.plays.map(function (a) {
+        var s = sp(a);
+        return '<div class="lr"><span class="name">' + s.emoji + " " + s.name + "</span><b>" +
+          (isLive(a) ? esc(u.levels[a] || "Any level")
+            : '<span style="color:var(--amber)">' + S.demand[a] + "/" + s.threshold + " — waiting</span>") + "</b></div>";
+      }).join("") + "</div>" +
+      '<button class="link" data-go="sports"><span class="ic">＋</span>' +
+      '<div style="flex:1">Add a sport<small>' +
+      sportIds().filter(function (id) { return !isLive(id); }).length +
+      " more waiting to open near you</small></div><span class=\"arw\">›</span></button>" +
 
-      '<h2 class="sec">Settings</h2>' +
-      '<div class="link" style="cursor:default"><div>Tell me when someone needs a player<small>Within ' + u.radius +
-      " miles · " + u.plays.join(" &amp; ") + '</small></div>' +
-      '<button class="toggle" data-act="notify" aria-pressed="' + S.notify + '" aria-label="Notifications"></button></div>' +
-      '<button class="link" data-act="radius"><div>Search radius<small>Currently ' + u.radius + " miles</small></div><span class=\"arw\">›</span></button>" +
+      (mine.length
+        ? '<h2 class="sec">Your games<span class="rule"></span></h2>' + mine.map(function (g) {
+            return '<button class="link" data-go="game" data-id="' + g.id + '"><div style="flex:1">' +
+              sp(g.sport).emoji + " " + esc(g.title) + "<small>" + whenLabel(g.day) + " · " + g.time + " · " +
+              (g.cost ? money(share(g)) + " each" : "Free") + (isRegular(g) ? " · you're a regular" : "") +
+              "</small></div><span class=\"arw\">›</span></button>";
+          }).join("")
+        : "") +
+
+      '<h2 class="sec">Settings<span class="rule"></span></h2>' +
+      '<div class="link" style="cursor:default"><div style="flex:1">Tell me when someone needs a player' +
+      "<small>Within " + u.radius + " miles · " +
+      (myLiveSports().map(function (a) { return sp(a).name.toLowerCase(); }).join(" and ") || "no live sports") +
+      '</small></div><button class="toggle" data-act="notify" aria-pressed="' + S.notify + '" aria-label="Notifications"></button></div>' +
+      '<button class="link" data-act="radius"><div style="flex:1">Search radius' +
+      "<small>Currently " + u.radius + " miles</small></div><span class=\"arw\">›</span></button>" +
 
       '<div style="flex:1; min-height:16px"></div>' +
-      '<button class="btn flat" data-act="reset">Reset the prototype</button>' +
-      "</main>" + tabs("you");
+      '<button class="btn flat" data-act="reset">Reset the prototype</button></main>' + tabs("you");
   };
-
-  function esc(s) {
-    return String(s).replace(/[&<>"]/g, function (c) {
-      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c];
-    });
-  }
 
   /* ---------------- render ---------------- */
   function render() {
     root.innerHTML = V[view.name] ? V[view.name](view.arg) : V.home();
     var th = document.getElementById("thread");
     if (th) th.scrollTop = th.scrollHeight;
-    var f = root.querySelector("main input, main select");
-    if (f && (view.name === "signup" || view.name === "place")) { /* leave focus to the user */ }
   }
 
-  /* ---------------- push + toast + sheet ---------------- */
+  /* ---------------- push / toast / sheet ---------------- */
   var pushEl = document.getElementById("push");
   var toastEl = document.getElementById("toast");
   var sheetEl = document.getElementById("sheet");
@@ -932,62 +1404,62 @@
     pushTarget = target;
     pushEl.innerHTML = '<span class="ic">' + icon + '</span><span class="t"><b>' + esc(title) +
       "</b><span>" + esc(body) + "</span></span>";
-    pushEl.classList.remove("show");
-    void pushEl.offsetWidth;
-    pushEl.classList.add("show");
+    pushEl.classList.remove("show"); void pushEl.offsetWidth; pushEl.classList.add("show");
     clearTimeout(pushT);
-    pushT = setTimeout(function () { pushEl.classList.remove("show"); }, 5200);
+    pushT = setTimeout(function () { pushEl.classList.remove("show"); }, 5400);
   }
   pushEl.addEventListener("click", function () {
     pushEl.classList.remove("show");
     if (pushTarget) go(pushTarget.name, pushTarget.arg);
   });
-
   function toast(msg) {
     toastEl.textContent = msg;
-    toastEl.classList.remove("show");
-    void toastEl.offsetWidth;
-    toastEl.classList.add("show");
+    toastEl.classList.remove("show"); void toastEl.offsetWidth; toastEl.classList.add("show");
     clearTimeout(toastT);
-    toastT = setTimeout(function () { toastEl.classList.remove("show"); }, 2200);
+    toastT = setTimeout(function () { toastEl.classList.remove("show"); }, 2600);
   }
-
-  function sheet(title, body, actions) {
+  function sheet(html) {
     sheetEl.innerHTML = '<button class="scrim" data-act="close-sheet" aria-label="Close"></button>' +
-      '<div class="panel"><h3>' + title + "</h3><p>" + body + "</p>" +
-      actions.map(function (a) {
-        return '<button class="btn ' + (a.cls || "") + '" data-act="' + a.act + '"' +
-          (a.id ? ' data-id="' + a.id + '"' : "") + ">" + a.label + "</button>";
-      }).join("") + "</div>";
+      '<div class="panel">' + html + "</div>";
     sheetEl.classList.add("show");
   }
   function closeSheet() { sheetEl.classList.remove("show"); sheetEl.innerHTML = ""; }
+  function btns(list) {
+    return list.map(function (a) {
+      return '<button class="btn ' + (a.cls || "") + '" data-act="' + a.act + '"' +
+        (a.id ? ' data-id="' + a.id + '"' : "") + ">" + a.label + "</button>";
+    }).join("");
+  }
 
   /* ---------------- actions ---------------- */
   var A = {};
 
   A["demo-signin"] = function () {
-    S.user = { name:"Shiv", ini:"S", plays:["cricket","badminton"], pc:"LE18", radius:10, isNew:false };
+    S.user = { name:"Shiv", ini:"S", plays:["cricket", "badminton"], pc:"LE18",
+      radius:10, isNew:false, levels:{ badminton:"Improver" }, record:{ played:6, missed:0 } };
+    COLORS.S = "#3C7A5A";
     S.onboarded = true;
-    S.post = defaultPost(S.user.plays[0]);
-    save();
-    go("home", null, true);
-    stack = [];
+    S.wanted = [];
+    S.demand.football = 19;  /* one short — you are the twentieth */
+    S.demand.padel = 12;
+    var g1 = game("g1");
+    if (g1 && g1.regulars.indexOf("me") === -1) g1.regulars.push("me");
+    S.post = defaultPost("badminton");
+    save(); stack = []; go("home", null, true);
     setTimeout(function () {
-      push("🏸", "Tom needs a 4th", "Friday doubles at Active Wigston · 7:00pm", { name:"game", arg:"g1" });
-    }, 1400);
+      push("🏸", "Friday badminton — are you in?", "Chris is out. 3 of 4 so far · Active Wigston", { name:"home", arg:null });
+    }, 1500);
   };
 
   A.signup = function () {
     var name = (document.getElementById("f-name").value || "").trim();
     var email = (document.getElementById("f-email").value || "").trim();
     var pass = document.getElementById("f-pass").value || "";
-    if (!name) { toast("What should we call you?"); document.getElementById("f-name").focus(); return; }
-    if (!email || email.indexOf("@") === -1) { toast("That email doesn't look right"); document.getElementById("f-email").focus(); return; }
-    if (pass.length < 6) { toast("Password needs 6+ characters"); document.getElementById("f-pass").focus(); return; }
-    S.draft = { name:name, plays:[], pc:"LE18", radius:10, isNew:false };
-    save();
-    go("pick");
+    if (!name) { toast("What should we call you?"); return; }
+    if (!email || email.indexOf("@") === -1) { toast("That email doesn't look right"); return; }
+    if (pass.length < 6) { toast("Password needs six or more characters"); return; }
+    S.draft = { name:name, plays:[], pc:"LE18", radius:10, isNew:false, levels:{} };
+    save(); go("pick");
   };
 
   A["toggle-play"] = function (el) {
@@ -996,178 +1468,451 @@
     if (i === -1) S.draft.plays.push(id); else S.draft.plays.splice(i, 1);
     save(); render();
   };
-  A.soon = function () { toast("Not yet — cricket and badminton first"); };
   A["to-place"] = function () { go("place"); };
   A["toggle-new"] = function () { S.draft.isNew = !S.draft.isNew; save(); render(); };
-
-  A.finish = function () {
-    var pc = (document.getElementById("f-pc").value || "LE18").trim().toUpperCase();
-    var rad = parseInt(document.getElementById("f-rad").value, 10) || 10;
-    var d = S.draft;
-    var ini = d.name.trim().split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase();
-    S.user = { name:d.name, ini:ini, plays:d.plays, pc:pc, radius:rad, isNew:d.isNew };
-    S.onboarded = true;
-    S.post = defaultPost(d.plays[0]);
-    delete S.draft;
+  A["to-levels"] = function () {
+    S.draft.pc = (document.getElementById("f-pc").value || "LE18").trim().toUpperCase();
+    S.draft.radius = parseInt(document.getElementById("f-rad").value, 10) || 10;
     save();
-    stack = [];
-    go("home", null, true);
-    setTimeout(function () {
-      var g = feed().filter(function (x) { return x.players.length < x.need; })[0];
-      if (g) {
-        var h = person(g.host);
-        push("🔔", h.first + " needs a player", g.title + " · " + whenLabel(g.day) + " " + g.time, { name:"game", arg:g.id });
-      }
-    }, 1600);
+    if (S.draft.plays.some(function (id) { return sp(id).levels; })) go("levels");
+    else A.finish();
+  };
+  A["set-level"] = function (el) {
+    S.draft.levels[el.getAttribute("data-id")] = el.getAttribute("data-v");
+    save(); render();
   };
 
-  function defaultPost(activity) {
-    return { activity:activity || "badminton", title:"", day:0, time:"7:00pm",
-      venue:"Active Wigston, Station Rd", need:4, cost:20, note:"" };
-  }
+  A.finish = function () {
+    var d = S.draft;
+    var ini = d.name.trim().split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase();
+    S.user = { name:d.name, ini:ini, plays:d.plays.slice(), pc:d.pc, radius:d.radius,
+      isNew:d.isNew, levels:d.levels, record:{ played:0, missed:0 } };
+    COLORS[ini] = "#3C7A5A";
+    /* picking a sport that isn't open counts you toward its threshold —
+       and if you're the one who tips it over, it opens right now */
+    var tipped = d.plays.filter(function (id) { return !SPORTS[id].live; }).filter(countMeIn);
+    S.onboarded = true;
+    S.post = defaultPost(myLiveSports()[0] || "badminton");
+    delete S.draft;
+    save(); stack = []; go("home", null, true);
 
+    if (tipped.length) { setTimeout(function () { celebrate(tipped[0]); }, 900); return; }
+    setTimeout(function () {
+      var g = feed().filter(function (x) { return spotsLeft(x) > 0; })[0];
+      if (!g) return;
+      var h = person(g.host);
+      push("🔔", h.first + " needs a player",
+        sp(g.sport).emoji + " " + g.title + " · " + whenLabel(g.day) + " " + g.time, { name:"game", arg:g.id });
+    }, 1700);
+  };
+
+  function defaultPost(sport) {
+    var v = venuesFor(sport)[0] || VENUES[0];
+    return { sport:sport, title:"", day:0, time:"7:00pm", venueId:v.id,
+      need:defaultNeed(sport), cost:v.price, note:"", repeats:false, beginners:true, level:"any" };
+  }
+  A["new-game"] = function () {
+    var live = myLiveSports();
+    if (live.length && (!S.post || live.indexOf(S.post.sport) === -1)) S.post = defaultPost(live[0]);
+    save(); go("post");
+  };
+
+  /* --- join / waitlist / auto-fill: the engine --- */
   A.join = function (el) {
     var g = game(el.getAttribute("data-id"));
-    if (!g || inGame(g) || g.players.length >= g.need) return;
+    if (!g || inGame(g) || spotsLeft(g) <= 0) return;
     g.players.push({ id:"me", name:S.user.name, ini:S.user.ini });
-    COLORS[S.user.ini] = "#3C7A5A";
-    g.msgs.push({ from:"me", text:S.user.name + " joined the game 👋", ago:0 });
-    save();
-    render();
-    var full = g.players.length >= g.need;
+    g.waitlist = g.waitlist.filter(function (x) { return x !== "me"; });
+    g.out = g.out.filter(function (x) { return x !== "me"; });
+    g.msgs.push({ sys:true, text:S.user.name + " is in" });
+    save(); render();
+    var full = spotsLeft(g) <= 0;
     toast(full ? "You're in — that's a full game 🎉" : "You're in");
-    var host = person(g.host);
-    if (host) {
+
+    if (g.repeats && !isRegular(g)) {
       setTimeout(function () {
-        var line = full
-          ? "Brilliant, that's us sorted. See you " + whenLabel(g.day).toLowerCase() + " 👊"
-          : "Nice one, welcome aboard 👊";
-        g.msgs.push({ from:g.host, text:line, ago:0 });
-        if (!S.chats[g.host]) S.chats[g.host] = { msgs:[], unread:0, at:Date.now() };
-        save();
-        push("💬", host.first + " · " + g.title.split(" at ")[0], line, { name:"gchat", arg:g.id });
-        if (view.name === "gchat" || view.name === "game") render();
-      }, 2200);
+        sheet('<div class="big">🔁</div><h3>Make it a regular?</h3>' +
+          "<p>This game runs every " + dowOf(g.day).toLowerCase() +
+          ". If you're a regular we just ask you each week — in or out — instead of you having to remember to check.</p>" +
+          "<p>Most real sport is a standing fixture. This is the bit WhatsApp is genuinely bad at.</p>" +
+          btns([{ label:"Yes, ask me every week", act:"regular", id:g.id },
+                { label:"Just this once", act:"close-sheet", cls:"ghost" }]));
+      }, 850);
+      return;
     }
+    hostReply(g, full);
+  };
+
+  function hostReply(g, full) {
+    if (g.host === "me") return;
+    var host = person(g.host);
+    if (!host) return;
+    setTimeout(function () {
+      var line = full ? "That's us sorted. See you " + whenLabel(g.day).toLowerCase() + " 👊" : "Nice one, welcome aboard 👊";
+      g.msgs.push({ from:g.host, text:line });
+      save();
+      push("💬", host.first + " · " + g.title, line, { name:"gchat", arg:g.id });
+      if (view.name === "gchat" || view.name === "game") render();
+    }, 2300);
+  }
+
+  A.regular = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    if (g.regulars.indexOf("me") === -1) g.regulars.push("me");
+    save(); closeSheet(); render();
+    toast("You're a regular — we'll ask you every week");
+    hostReply(g, spotsLeft(g) <= 0);
+  };
+
+  A.out = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    if (g.out.indexOf("me") === -1) g.out.push("me");
+    g.players = g.players.filter(function (p) { return p.id !== "me"; });
+    g.msgs.push({ sys:true, text:S.user.name + " can't make it this week" });
+    save(); render();
+    toast("Told them. We'll ask again next week.");
   };
 
   A.leave = function (el) {
     var g = game(el.getAttribute("data-id"));
-    if (!g) return;
+    var wasFull = spotsLeft(g) <= 0;
     g.players = g.players.filter(function (p) { return p.id !== "me"; });
     g.paid = g.paid.filter(function (x) { return x !== "me"; });
-    save(); render(); toast("You're out — spot's back open");
+    g.msgs.push({ sys:true, text:S.user.name + " dropped out" });
+    save(); render();
+    toast("You're out — the spot's back open");
+    if (wasFull && g.waitlist.length) promote(g);
+    else autoFill(g);
   };
 
+  function promote(g) {
+    setTimeout(function () {
+      var next = g.waitlist.shift();
+      if (!next) return;
+      var pp = person(next);
+      g.players.push(p2p(next));
+      g.msgs.push({ sys:true, text:pp.first + " came off the waitlist" });
+      save();
+      push("🙌", pp.first + " is in", "Straight off the waitlist · " + g.players.length + "/" + g.need, { name:"game", arg:g.id });
+      if (view.name === "game" || view.name === "home") render();
+    }, 2000);
+  }
+
+  /* nobody waiting? ping the nearest people who play this sport */
+  function autoFill(g) {
+    var cands = PEOPLE.filter(function (p) {
+      return p.plays.indexOf(g.sport) !== -1 && !g.players.some(function (x) { return x.id === p.id; });
+    }).sort(function (a, b) { return a.far - b.far; });
+    if (!cands.length) return;
+    setTimeout(function () {
+      if (spotsLeft(g) <= 0) return;
+      var p = cands[0];
+      g.players.push(p2p(p.id));
+      g.msgs.push({ sys:true, text:p.first + " saw the gap and is in" });
+      save();
+      push("🙌", p.first + " filled the spot",
+        "We pinged " + S.demand[g.sport] + " people nearby · " + g.players.length + "/" + g.need, { name:"game", arg:g.id });
+      if (view.name === "game" || view.name === "home") render();
+    }, 3200);
+  }
+
+  A.wait = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    if (g.waitlist.indexOf("me") === -1) g.waitlist.push("me");
+    save(); render();
+    toast("On the waitlist — we'll grab the spot the second it opens");
+
+    /* the engine, demonstrated: the least reliable player drops out */
+    var flaky = g.players.filter(function (p) {
+      var pp = person(p.id);
+      return p.id !== "me" && pp && pp.record && pp.record.missed > 2;
+    })[0] || g.players[g.players.length - 1];
+    if (!flaky) return;
+
+    setTimeout(function () {
+      if (!onList(g)) return;
+      var pp = person(flaky.id);
+      g.players = g.players.filter(function (p) { return p.id !== flaky.id; });
+      g.msgs.push({ sys:true, text:pp.first + " dropped out" });
+      g.waitlist = g.waitlist.filter(function (x) { return x !== "me"; });
+      g.players.push({ id:"me", name:S.user.name, ini:S.user.ini });
+      g.msgs.push({ sys:true, text:S.user.name + " came off the waitlist" });
+      save();
+      push("🎉", pp.first + " dropped out — you're in",
+        g.title + " · " + whenLabel(g.day) + " " + g.time + " · nobody had to ask", { name:"game", arg:g.id });
+      if (view.name === "game" || view.name === "home") render();
+    }, 4200);
+  };
+  A.unwait = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    g.waitlist = g.waitlist.filter(function (x) { return x !== "me"; });
+    save(); render(); toast("Off the waitlist");
+  };
+
+  /* --- booking and money --- */
   A.book = function (el) {
-    var id = el.getAttribute("data-id");
-    var g = game(id);
-    sheet("Book at " + g.venue.split(",")[0],
-      "In the real app this opens the leisure centre's own booking page in your browser — we never take the booking or the money. Come back and mark it booked so everyone knows it's sorted.",
-      [{ label:"I've booked it", act:"booked", id:id, cls:"green" },
-       { label:"Not yet", act:"close-sheet", cls:"ghost" }]);
+    var g = game(el.getAttribute("data-id")), v = venue(g.venueId);
+    sheet("<h3>Book at " + esc(v.name) + "</h3>" +
+      "<p>In the real app this opens their booking page in your browser. We never take the booking and we never hold the money — " +
+      "becoming a booking engine is a different, much worse company.</p>" +
+      "<code>" + esc(v.name.toLowerCase().replace(/[^a-z]+/g, "")) + ".co.uk/book</code>" +
+      "<p>Come back and mark it booked so everyone knows it's sorted.</p>" +
+      btns([{ label:"I've booked it", act:"booked", id:g.id, cls:"green" },
+            { label:"Not yet", act:"close-sheet", cls:"ghost" }]));
   };
   A.booked = function (el) {
     var g = game(el.getAttribute("data-id"));
-    g.booked = true;
-    g.msgs.push({ from:"me", text:"Booked ✅ " + g.court + ", " + money(share(g)) + " each.", ago:0 });
-    save(); closeSheet(); render(); toast("Booked — everyone's been told");
+    g.booked = true; g.hostPaid = true;
+    if (g.host === "me" && g.paid.indexOf("me") === -1) g.paid.push("me");
+    g.msgs.push({ sys:true, text:"Booked ✅ " + g.court + " · " + money(share(g)) + " each" });
+    save(); closeSheet(); render();
+    toast("Booked — everyone's been told");
   };
   A.pay = function (el) {
     var g = game(el.getAttribute("data-id"));
-    if (g.paid.indexOf("me") === -1) g.paid.push("me");
-    save(); render(); toast("Paid " + money(share(g)) + " — recorded");
+    var host = person(g.host) || { first:"the host" };
+    sheet("<h3>Pay " + esc(g.host === "me" ? "the venue" : host.first) + " " + money(share(g)) + "</h3>" +
+      "<p>Hangout never holds your money — no wallet, no float, no FCA permissions. This opens your bank with the amount filled in, " +
+      "then records that you've settled up so " + esc(g.host === "me" ? "you aren't" : host.first + " isn't") + " chasing anybody.</p>" +
+      btns([{ label:"Pay " + money(share(g)), act:"paid", id:g.id, cls:"green" },
+            { label:"Cancel", act:"close-sheet", cls:"ghost" }]));
   };
+  A.paid = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    if (g.paid.indexOf("me") === -1) g.paid.push("me");
+    save(); closeSheet(); render();
+    toast("Paid " + money(share(g)) + " — recorded");
+  };
+  A.nudge = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    var owe = g.players.filter(function (p) { return g.paid.indexOf(p.id) === -1; });
+    if (!owe.length) { toast("Everyone's paid"); return; }
+    toast("Nudged " + plural(owe.length, "person", "people"));
+    setTimeout(function () {
+      var p = owe[0];
+      if (g.paid.indexOf(p.id) === -1) g.paid.push(p.id);
+      save();
+      push("💷", p.name + " paid you", money(share(g)) + " · " + g.title, { name:"game", arg:g.id });
+      if (view.name === "game") render();
+    }, 2400);
+  };
+
+  A.weather = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    sheet('<div class="big">🌧</div><h3>Call it off?</h3>' +
+      "<p>It's outdoors, so it lives and dies by the weather. One tap and all " + plural(g.players.length, "player") +
+      " are told at once — which is the entire reason this isn't a WhatsApp group nobody reads.</p>" +
+      btns([{ label:"It's off — tell everyone", act:"cancel-game", id:g.id, cls:"amber" },
+            { label:"It's on", act:"close-sheet", cls:"ghost" }]));
+  };
+  A["cancel-game"] = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    g.cancelled = true;
+    g.msgs.push({ sys:true, text:"Called off — weather" });
+    save(); closeSheet(); render();
+    toast("Called off · " + plural(g.players.length, "person", "people") + " told");
+    setTimeout(function () {
+      push("🌧", g.title + " is off", "Weather. All " + g.players.length + " told at once.", { name:"game", arg:g.id });
+    }, 800);
+  };
+
+  A.venue = function (el) {
+    var v = venue(el.getAttribute("data-id"));
+    sheet("<h3>" + esc(v.name) + "</h3>" +
+      "<p>" + esc(v.area) + " · " + v.far + " miles · " +
+      (v.price ? "£" + v.price + " per " + v.unit : "free, no booking") + "</p>" +
+      "<p>Does " + v.sports.map(function (s) { return sp(s).emoji + " " + sp(s).name.toLowerCase(); }).join(", ") + ".</p>" +
+      "<p>We keep every venue near you on file before we have a single player. It's why the app can always tell you " +
+      "<em>where</em> you could play, even when it can't yet tell you who with.</p>" +
+      (v.price ? "<code>" + esc(v.name.toLowerCase().replace(/[^a-z]+/g, "")) + ".co.uk/book</code>" : "") +
+      btns([{ label:"Post a game here", act:"post-here", id:v.id },
+            { label:"Close", act:"close-sheet", cls:"ghost" }]));
+  };
+  A["post-here"] = function (el) {
+    var v = venue(el.getAttribute("data-id"));
+    var mineLive = myLiveSports();
+    var s = v.sports.filter(function (x) { return isLive(x) && mineLive.indexOf(x) !== -1; })[0];
+    if (!s) { closeSheet(); toast("None of your sports are open at that venue yet"); return; }
+    S.post = defaultPost(s);
+    S.post.venueId = v.id;
+    S.post.cost = v.price;
+    save(); closeSheet(); go("post");
+  };
+  A.video = function () { toast("Embedded YouTube — not wired up in the prototype"); };
   A["close-sheet"] = function () { closeSheet(); };
 
-  function grabPost() {
-    var t = document.getElementById("p-title"); if (!t) return;
-    S.post.title = t.value;
-    S.post.need = parseInt(document.getElementById("p-need").value, 10) || 4;
-    S.post.cost = parseFloat(document.getElementById("p-cost").value) || 0;
-    S.post.venue = document.getElementById("p-venue").value;
-    S.post.time = document.getElementById("p-time").value;
-    S.post.day = parseInt(document.getElementById("p-day").value, 10) || 0;
-    S.post.note = document.getElementById("p-note").value;
+  /* --- demand capture: the threshold that launches a sport ---
+     Used by both the Sports tab and onboarding, so a sport can never sit
+     at 20/20 and still be locked. */
+  function countMeIn(id) {
+    if (S.wanted.indexOf(id) !== -1) return false;
+    S.wanted.push(id);
+    S.demand[id] += 1;
+    if (S.user && S.user.plays.indexOf(id) === -1) S.user.plays.push(id);
+    if (SPORTS[id].live || S.unlocked.indexOf(id) !== -1) return false;
+    if (S.demand[id] < SPORTS[id].threshold) return false;
+    S.unlocked.push(id);
+    seedGameFor(id);
+    return true;   /* you were the one who tipped it over */
   }
-  A["post-act"] = function (el) {
+
+  function celebrate(id) {
+    var s = sp(id);
+    sheet('<div class="big">' + s.emoji + "</div><h3>" + s.name + " just went live in " + esc(S.user.pc) + "</h3>" +
+      "<p>You were number " + s.threshold + ". That's the threshold — enough people near " + esc(S.user.pc) +
+      " that a shout actually gets answered.</p>" +
+      "<p>This is the whole rule. A sport doesn't exist here until it has the density to work, because otherwise every new " +
+      "sport just splits your neighbours across more empty rooms.</p>" +
+      "<p>The first game is already up, and the other " + (s.threshold - 1) + " people have been told.</p>" +
+      btns([{ label:"See " + s.name.toLowerCase() + " near me", act:"goto-sport", id:id },
+            { label:"Later", act:"close-sheet", cls:"ghost" }]));
+    setTimeout(function () {
+      push(s.emoji, s.name + " is live near you",
+        s.threshold + " of " + s.threshold + " people · first game up at " + venuesFor(id)[0].name, { name:"sport", arg:id });
+    }, 6500);
+  }
+
+  A.want = function (el) {
+    var id = el.getAttribute("data-id"), s = sp(id);
+    if (S.wanted.indexOf(id) !== -1) return;
+    var unlocked = countMeIn(id);
+    save(); render();
+    if (unlocked) { setTimeout(function () { celebrate(id); }, 350); return; }
+    toast("Counted. " + plural(s.threshold - S.demand[id], "more person", "more people") + " and " +
+      s.name.toLowerCase() + " opens here.");
+  };
+  A["goto-sport"] = function (el) { closeSheet(); go("sport", el.getAttribute("data-id")); };
+
+  function seedGameFor(id) {
+    var s = sp(id), v = venuesFor(id)[0];
+    var cands = PEOPLE.filter(function (p) { return p.plays.indexOf(id) !== -1; });
+    var starters = cands.slice(0, Math.max(1, Math.min(cands.length, defaultNeed(id) - 3)));
+    if (!starters.length) starters = [PEOPLE[2]];
+    S.games.unshift({
+      id:"seed-" + id, sport:id,
+      title:id === "football" ? "Sunday five-a-side" : "First " + s.name.toLowerCase() + " session",
+      venueId:v.id, court:s.shape === "sides" ? "Pitch 2" : "Court 1",
+      day:nextDow(id === "football" ? 0 : 6), time:"6:30pm",
+      cost:v.price, need:defaultNeed(id),
+      host:starters[0].id, repeats:true, regulars:starters.map(function (p) { return p.id; }),
+      players:starters.map(function (p) { return p2p(p.id); }), waitlist:[], out:[],
+      level:"any", beginners:true, cancelled:false,
+      note:"The first one since " + s.name.toLowerCase() + " opened here. Everyone's new to it — come along.",
+      booked:false, hostPaid:false, paid:[],
+      msgs:[{ sys:true, text:s.name + " went live in " + S.user.pc }]
+    });
+  }
+
+  /* --- post --- */
+  function grabPost() {
+    var t = document.getElementById("p-title");
+    if (!t) return;
+    var d = S.post;
+    d.title = t.value;
+    var n = document.getElementById("p-need"); if (n) d.need = parseInt(n.value, 10) || d.need;
+    var c = document.getElementById("p-cost");
+    d.cost = c ? (parseFloat(c.value) || 0) : 0;   /* no cost input = a free venue */
+    d.venueId = document.getElementById("p-venue").value;
+    d.time = document.getElementById("p-time").value;
+    d.day = parseInt(document.getElementById("p-day").value, 10) || 0;
+    d.note = document.getElementById("p-note").value;
+  }
+  /* changing the venue re-prices the game — a park is free, the nets are not */
+  document.addEventListener("change", function (e) {
+    if (!e.target || e.target.id !== "p-venue" || view.name !== "post") return;
     grabPost();
-    S.post.activity = el.getAttribute("data-id");
+    S.post.cost = venue(S.post.venueId).price;
+    save(); render();
+  });
+  A["post-sport"] = function (el) {
+    grabPost();
+    var keep = { title:S.post.title, note:S.post.note, repeats:S.post.repeats, beginners:S.post.beginners };
+    S.post = defaultPost(el.getAttribute("data-id"));
+    S.post.title = keep.title; S.post.note = keep.note;
+    S.post.repeats = keep.repeats; S.post.beginners = keep.beginners;
     save(); render();
   };
+  A["post-level"]     = function (el) { grabPost(); S.post.level = el.getAttribute("data-v"); save(); render(); };
+  A["post-repeat"]    = function ()   { grabPost(); S.post.repeats = !S.post.repeats; save(); render(); };
+  A["post-beginners"] = function ()   { grabPost(); S.post.beginners = !S.post.beginners; save(); render(); };
 
   A["post-it"] = function () {
-    var d = S.post;
-    var title = (document.getElementById("p-title").value || "").trim();
-    var need = parseInt(document.getElementById("p-need").value, 10) || 4;
-    var cost = parseFloat(document.getElementById("p-cost").value) || 0;
-    var venue = document.getElementById("p-venue").value;
-    var time = document.getElementById("p-time").value;
-    var dayOff = parseInt(document.getElementById("p-day").value, 10) || 0;
-    var note = (document.getElementById("p-note").value || "").trim();
-    if (!title) { toast("Give it a name"); document.getElementById("p-title").focus(); return; }
-
-    var when = new Date(); when.setHours(0,0,0,0);
-    when.setDate(when.getDate() + dayOff + 1);
+    grabPost();
+    var d = S.post, s = sp(d.sport);
+    if (!d.title.trim()) { toast("Give it a name"); return; }
+    var when = new Date(); when.setHours(0, 0, 0, 0);
+    when.setDate(when.getDate() + d.day + 1);
 
     var g = {
-      id: "u" + Date.now(),
-      activity: d.activity, title: title, venue: venue, court: "Court 1",
-      far: 1.2, day: when.getTime(), time: time, cost: cost, need: need,
-      host: "me", players: [{ id:"me", name:S.user.name, ini:S.user.ini }],
-      note: note, booked: false, paid: [], msgs: []
+      id:"u" + Date.now(), sport:d.sport, title:d.title.trim(), venueId:d.venueId,
+      court:s.shape === "sides" ? "Pitch 1" : "Court 1",
+      day:when.getTime(), time:d.time,
+      cost:d.cost,
+      need:s.shape === "fixed" ? s.players.ideal : d.need,
+      host:"me", repeats:d.repeats, regulars:d.repeats ? ["me"] : [],
+      players:[{ id:"me", name:S.user.name, ini:S.user.ini }], waitlist:[], out:[],
+      level:d.level, beginners:d.beginners, note:d.note.trim(),
+      booked:false, hostPaid:false, paid:[], cancelled:false, msgs:[]
     };
-    COLORS[S.user.ini] = "#3C7A5A";
     S.games.unshift(g);
-    S.post = defaultPost(d.activity);
-    save();
-    stack = [];
-    go("home", null, true);
-    toast("Posted to " + (NEARBY[d.activity] || 0) + " people nearby");
+    S.post = defaultPost(d.sport);
+    save(); stack = []; go("home", null, true);
+    toast("Posted to " + plural(S.demand[d.sport] || 0, "person", "people") + " nearby");
 
-    /* the loop closes: someone nearby answers */
-    var candidates = PEOPLE.filter(function (p) {
-      return p.plays.indexOf(g.activity) !== -1 && !g.players.some(function (x) { return x.id === p.id; });
+    var cands = PEOPLE.filter(function (p) { return p.plays.indexOf(g.sport) !== -1; })
+      .sort(function (a, b) { return a.far - b.far; });
+    [[2600, 0], [7000, 1], [12000, 2]].forEach(function (pair) {
+      var p = cands[pair[1]];
+      if (!p) return;
+      setTimeout(function () {
+        if (spotsLeft(g) <= 0 || g.players.some(function (x) { return x.id === p.id; })) return;
+        g.players.push(p2p(p.id));
+        g.msgs.push({ from:p.id, text:pair[1] === 0 ? "I'm in! Been looking for a game for weeks." : "Count me in 👍" });
+        save();
+        push("🙌", p.first + " is in", g.title + " · " + g.players.length + "/" + g.need + " players", { name:"game", arg:g.id });
+        if (view.name === "home" || view.name === "game" || view.name === "gchat") render();
+      }, pair[0]);
     });
-    if (candidates.length) {
-      var first = candidates[0];
-      setTimeout(function () {
-        g.players.push(p2p(first.id));
-        g.msgs.push({ from:first.id, text:"I'm in! Been looking for a game for weeks.", ago:0 });
-        save();
-        push("🙌", first.first + " is in", g.title + " · " + g.players.length + "/" + g.need + " players", { name:"game", arg:g.id });
-        if (view.name === "home" || view.name === "game" || view.name === "gchat") render();
-      }, 2600);
-    }
-    if (candidates.length > 1) {
-      var second = candidates[1];
-      setTimeout(function () {
-        if (g.players.length >= g.need) return;
-        g.players.push(p2p(second.id));
-        save();
-        push("🙌", second.first + " is in", g.title + " · " + g.players.length + "/" + g.need + " players", { name:"game", arg:g.id });
-        if (view.name === "home" || view.name === "game" || view.name === "gchat") render();
-      }, 7000);
-    }
   };
 
+  /* --- share: a public link that needs no account --- */
+  A.share = function (el) {
+    var g = game(el.getAttribute("data-id"));
+    if (!g) return;
+    sheet('<div class="big">🔗</div><h3>Share this game</h3>' +
+      "<p>Anyone can open this link — no app, no account, nothing to install. They see the game, and signing up is what happens " +
+      "<em>after</em> they've decided to come.</p>" +
+      "<p>That's how you grow inside the WhatsApp groups that already exist, instead of trying to replace them.</p>" +
+      "<code>hangout.app/g/" + esc(g.id) + "</code>" +
+      btns([{ label:"Copy link", act:"copy" }, { label:"Close", act:"close-sheet", cls:"ghost" }]));
+  };
+  A.copy = function () { closeSheet(); toast("Link copied — paste it in the group chat"); };
+
+  /* --- settings --- */
   A.pfilter = function (el) { S.peopleFilter = el.getAttribute("data-id"); save(); render(); };
   A.notify = function () { S.notify = !S.notify; save(); render(); toast(S.notify ? "Pings on" : "Pings off"); };
   A.radius = function () {
-    sheet("Search radius", "How far are you willing to travel for a game?",
-      [3,5,10,15,25].map(function (m) {
-        return { label:m + " miles" + (S.user.radius === m ? " ✓" : ""), act:"set-radius", id:String(m), cls:S.user.radius === m ? "dark" : "ghost" };
-      }));
+    sheet("<h3>Search radius</h3>" +
+      "<p>How far would you genuinely travel for a game? Be honest — a badminton court 25 miles away is a game you won't go to.</p>" +
+      btns([3, 5, 10, 15, 25].map(function (m) {
+        return { label:m + " miles" + (S.user.radius === m ? "  ✓" : ""), act:"set-radius", id:String(m),
+          cls:S.user.radius === m ? "dark" : "ghost" };
+      })));
   };
   A["set-radius"] = function (el) {
     S.user.radius = parseInt(el.getAttribute("data-id"), 10);
-    save(); closeSheet(); render(); toast("Showing games within " + S.user.radius + " miles");
+    save(); closeSheet(); render();
+    toast("Showing games within " + S.user.radius + " miles");
   };
   A.reset = function () {
-    sheet("Reset the prototype?", "Wipes your account, your games and your messages, and puts everything back to how it was.",
-      [{ label:"Reset it", act:"do-reset" }, { label:"Cancel", act:"close-sheet", cls:"ghost" }]);
+    sheet("<h3>Reset the prototype?</h3>" +
+      "<p>Wipes your account, your games, your messages and every sport you unlocked. Back to a blank Leicester.</p>" +
+      btns([{ label:"Reset it", act:"do-reset" }, { label:"Cancel", act:"close-sheet", cls:"ghost" }]));
   };
-  A["do-reset"] = function () { closeSheet(); stack = []; reset(); };
+  A["do-reset"] = function () {
+    closeSheet(); S = fresh(); save(); stack = [];
+    view = { name:"welcome", arg:null }; render();
+  };
 
   /* ---------------- events ---------------- */
   document.addEventListener("click", function (e) {
@@ -1188,8 +1933,7 @@
     var f = e.target.closest("[data-form]");
     if (!f) return;
     e.preventDefault();
-    var kind = f.getAttribute("data-form");
-    var id = f.getAttribute("data-id");
+    var kind = f.getAttribute("data-form"), id = f.getAttribute("data-id");
     var input = f.querySelector("input");
     var text = (input.value || "").trim();
     if (!text) return;
@@ -1202,45 +1946,55 @@
       save(); render();
       var p = person(id);
       var pool = REPLIES[id] || ["👍"];
-      var reply = pool[Math.min(S.chats[id].msgs.filter(function (m) { return !m.me; }).length, pool.length - 1)];
+      var i = Math.min(S.chats[id].msgs.filter(function (m) { return !m.me; }).length, pool.length - 1);
       setTimeout(function () {
-        S.chats[id].msgs.push({ me:false, text:reply });
+        S.chats[id].msgs.push({ me:false, text:pool[i] });
         S.chats[id].at = Date.now();
-        if (view.name !== "chat" || view.arg !== id) S.chats[id].unread = (S.chats[id].unread || 0) + 1;
+        if (!(view.name === "chat" && view.arg === id)) S.chats[id].unread = (S.chats[id].unread || 0) + 1;
         save();
         if (view.name === "chat" && view.arg === id) render();
-        else push("💬", p.name, reply, { name:"chat", arg:id });
+        else push("💬", p.name, pool[i], { name:"chat", arg:id });
       }, 1800);
     }
 
     if (kind === "gmsg") {
       var g = game(id);
-      g.msgs.push({ from:"me", text:text, ago:0 });
+      g.msgs.push({ from:"me", text:text });
       save(); render();
-      var others = g.players.filter(function (x) { return x.id !== "me" && person(x.id); });
-      if (others.length) {
-        var who = others[0];
-        setTimeout(function () {
-          g.msgs.push({ from:who.id, text:(REPLIES[who.id] || ["👍"])[0], ago:0 });
-          save();
-          if (view.name === "gchat" && view.arg === id) render();
-        }, 1900);
-      }
+      var others = g.players.filter(function (x) { return x.id !== "me" && REPLIES[x.id]; });
+      if (!others.length) return;
+      var who = others[0];
+      setTimeout(function () {
+        g.msgs.push({ from:who.id, text:REPLIES[who.id][0] });
+        save();
+        if (view.name === "gchat" && view.arg === id) render();
+        else push("💬", who.name + " · " + g.title, REPLIES[who.id][0], { name:"gchat", arg:id });
+      }, 1900);
     }
   });
 
-  /* live clock */
   function clock() {
     var d = new Date(), h = d.getHours(), m = d.getMinutes();
     document.getElementById("clock").textContent = h + ":" + (m < 10 ? "0" : "") + m;
   }
   clock(); setInterval(clock, 20000);
 
-  /* boot */
+  /* ---------------- boot ---------------- */
   S = load();
-  if (!S.post && S.user) S.post = defaultPost(S.user.plays[0]);
+  if (!S.demand)   S.demand = JSON.parse(JSON.stringify(DEMAND_SEED));
+  if (!S.wanted)   S.wanted = [];
+  if (!S.unlocked) S.unlocked = [];
+  if (!S.chats)    S.chats = {};
+  if (!S.peopleFilter) S.peopleFilter = "all";
+  if (S.user) {
+    COLORS[S.user.ini] = "#3C7A5A";
+    if (!S.user.record) S.user.record = { played:0, missed:0 };
+    if (!S.user.levels) S.user.levels = {};
+    if (!S.post || myLiveSports().indexOf(S.post.sport) === -1) {
+      S.post = defaultPost(myLiveSports()[0] || "badminton");
+    }
+  }
   view = S.onboarded ? { name:"home", arg:null } : { name:"welcome", arg:null };
-  if (S.user) COLORS[S.user.ini] = "#3C7A5A";
   render();
 })();
 </script>

@@ -234,7 +234,10 @@
   .stile .arw { color:var(--ink-3); flex:none; }
   .stile.locked { border-style:dashed; cursor:default; flex-direction:column; align-items:stretch; gap:9px; }
   .stile.locked .ico { filter:grayscale(1); opacity:.6; }
-  .stile .head { display:flex; align-items:center; gap:12px; }
+  .stile .head { display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+    background:none; border:0; padding:0; font:inherit; color:var(--ink); cursor:pointer; }
+  .stile-foot { display:flex; align-items:center; gap:10px; justify-content:space-between; }
+  .stile-foot .note { margin:0; }
 
   .meter { display:block; height:5px; border-radius:999px; background:var(--line-soft); overflow:hidden; margin-top:6px; }
   .meter i { display:block; height:100%; background:var(--accent); border-radius:999px;
@@ -528,6 +531,46 @@
      whether a sport is a market or an empty room */
   var DEMAND_SEED = { badminton:38, cricket:12, football:19, padel:12, tennis:9, pickleball:4, squash:6, running:11 };
 
+  /* The same demand, broken down by postcode. This is the whole point of the
+     admin view: padel is 12/20 across LE18 but only 4 in LE3. A sport doesn't
+     open "in Leicester" — it opens in an area, or it doesn't open at all. */
+  var AREAS = ["LE18", "LE2", "LE3", "LE5", "LE8"];
+  var AREA_DEMAND = {
+    badminton:  { LE18:38, LE2:29, LE3:17, LE5:22, LE8:9 },
+    cricket:    { LE18:12, LE2:24, LE3:8,  LE5:31, LE8:5 },
+    football:   { LE18:19, LE2:16, LE3:11, LE5:14, LE8:6 },
+    padel:      { LE18:12, LE2:9,  LE3:4,  LE5:6,  LE8:3 },
+    tennis:     { LE18:9,  LE2:13, LE3:5,  LE5:7,  LE8:4 },
+    pickleball: { LE18:4,  LE2:3,  LE3:2,  LE5:2,  LE8:1 },
+    squash:     { LE18:6,  LE2:5,  LE3:3,  LE5:4,  LE8:2 },
+    running:    { LE18:11, LE2:18, LE3:7,  LE5:9,  LE8:5 }
+  };
+  function areaDemand(id, pc) {
+    var m = AREA_DEMAND[id] || {};
+    if (pc === (S && S.user ? S.user.pc : "LE18")) return S.demand[id];  /* your area is live state */
+    return m[pc] || 0;
+  }
+  function bestArea(id) {
+    var best = AREAS[0], n = -1;
+    AREAS.forEach(function (a) { var d = areaDemand(id, a); if (d > n) { n = d; best = a; } });
+    return { pc:best, n:n };
+  }
+
+  /* Demand requests — every "I want this" tap lands here, in front of a human.
+     In the early days you ARE the growth engine; this is the tool. */
+  function seedRequests() {
+    return [
+      { id:"r1", name:"Meera E.", ini:"ME", pc:"LE18", sport:"padel",      ago:"2h",  msgs:[] },
+      { id:"r2", name:"Priya R.", ini:"PR", pc:"LE18", sport:"padel",      ago:"5h",  msgs:[] },
+      { id:"r3", name:"Tom M.",   ini:"TM", pc:"LE18", sport:"football",   ago:"1d",  msgs:[] },
+      { id:"r4", name:"Nadia S.", ini:"NA", pc:"LE2",  sport:"tennis",     ago:"1d",  msgs:[] },
+      { id:"r5", name:"Chris W.", ini:"CW", pc:"LE5",  sport:"football",   ago:"2d",  msgs:[] },
+      { id:"r6", name:"Vik P.",   ini:"VK", pc:"LE2",  sport:"padel",      ago:"3d",  msgs:[] },
+      { id:"r7", name:"Sam O.",   ini:"SM", pc:"LE18", sport:"pickleball", ago:"4d",
+        msgs:[{ admin:true, text:"Thanks Sam — we're at 4 of 20 for pickleball round here, so it's a way off. I'll shout the moment it moves." }] }
+    ];
+  }
+
   var REPLIES = {
     ar:["Mate, thank you. I'll be there.","I've been here since March and not swung a bat once.","Perfect, see you Sunday 🏏"],
     pr:["Yes! We're always short on Fridays.","Court 3, 7pm. Don't be late.","👍"],
@@ -623,7 +666,8 @@
   var S = null;
   function fresh() {
     return { onboarded:false, user:null, games:seedGames(), chats:{}, notify:true,
-      demand:JSON.parse(JSON.stringify(DEMAND_SEED)), wanted:[], unlocked:[], post:null, peopleFilter:"all" };
+      demand:JSON.parse(JSON.stringify(DEMAND_SEED)), wanted:[], unlocked:[], post:null,
+      peopleFilter:"all", requests:seedRequests() };
   }
   function load() {
     try { var raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {}
@@ -1166,16 +1210,20 @@
         var want = S.wanted.indexOf(id) !== -1;
         var togo = t - d;
         return '<div class="stile locked">' +
-          '<div class="head"><span class="ico">' + s.emoji + "</span>" +
+          /* tappable: you can read all about it — you just can't play it yet */
+          '<button class="head" data-go="sport" data-id="' + id + '">' +
+          '<span class="ico">' + s.emoji + "</span>" +
           '<span class="t"><b>' + s.name + "</b><span>" + d + " of " + t + " people near " + esc(S.user.pc) +
           " · " + plural(venuesFor(id).length, "venue") + " ready</span></span>" +
-          (want ? '<span class="tag new">You\'re counted</span>'
-                : '<button class="btn sm dark" data-act="want" data-id="' + id + '">I want this</button>') +
-          "</div>" +
+          '<span class="arw">›</span></button>' +
           '<span class="meter' + (pct > 80 ? " close" : "") + '"><i style="width:' + pct + '%"></i></span>' +
+          '<div class="stile-foot">' +
+          (want ? '<span class="tag new">You\'re counted · we\'ll be in touch</span>'
+                : '<button class="btn sm dark" data-act="want" data-id="' + id + '">I want this</button>') +
           (togo === 1 && !want
-            ? '<p class="note left" style="color:var(--amber); font-weight:700">One more person and ' + s.name.toLowerCase() + " opens here.</p>"
-            : "") + "</div>";
+            ? '<span class="note left" style="color:var(--amber); font-weight:700">One more and it opens</span>'
+            : '<span class="note left">' + plural(togo, "more person", "more people") + " needed</span>") +
+          "</div></div>";
       }).join("") +
 
       '<p class="note" style="margin-top:8px">Demand first, then supply. It\'s also how we know which sport to open next, and exactly where.</p>' +
@@ -1210,12 +1258,14 @@
       (live && gs.length ? '<h2 class="sec">Games<span class="rule"></span></h2>' + gs.map(card).join("") : "") +
 
       (!live
-        ? '<div class="reach">' + s.name + " isn't open here yet — <b>" + togo + "</b> more " +
-          (togo === 1 ? "person" : "people") + " and it goes live. We already know <b>" +
-          plural(vs.length, "place") + "</b> you could play.<br>" +
+        ? '<div class="reach">' + s.name + " isn't open near " + esc(S.user.pc) + " yet — <b>" + togo + "</b> more " +
+          (togo === 1 ? "person" : "people") + " and it goes live.<br><br>" +
+          "There are no games and no players to show you, because there aren't any yet. " +
+          "Everything else is here: we already know <b>" + plural(vs.length, "place") + "</b> you could play." +
           (S.wanted.indexOf(id) === -1
             ? '<button class="btn" data-act="want" data-id="' + id + '">I want this</button>'
-            : '<span style="opacity:.8">You\'re counted. We\'ll tell you the moment it opens.</span>') + "</div>"
+            : '<br><br><span style="opacity:.85">✓ You\'re counted. Your request went to the Hangout team — they\'ll come back to you.</span>') +
+          "</div>"
         : "") +
 
       '<h2 class="sec">Where you can play<span class="rule"></span></h2>' +
@@ -1403,8 +1453,114 @@
       '<button class="link" data-act="radius"><div style="flex:1">Search radius' +
       "<small>Currently " + u.radius + " miles</small></div><span class=\"arw\">›</span></button>" +
 
+      '<h2 class="sec">Admin<span class="rule"></span></h2>' +
+      '<button class="link" data-go="admin"><span class="ic">📋</span><div style="flex:1">Requests and demand' +
+      "<small>" + plural(S.requests.filter(function (r) { return !r.msgs.length; }).length, "person", "people") +
+      " asking for a sport we haven't opened</small></div>" +
+      (S.requests.filter(function (r) { return !r.msgs.length; }).length
+        ? '<span class="dot"></span>' : '<span class="arw">›</span>') + "</button>" +
+
       '<div style="flex:1; min-height:16px"></div>' +
       '<button class="btn flat" data-act="reset">Reset the prototype</button></main>' + tabs("you");
+  };
+
+  /* ---------------- admin ---------------- */
+  /* Every "I want this" lands in front of a human. In the early days you are
+     the growth engine — this is the console for it. */
+  V.admin = function () {
+    var reqs = S.requests.slice().sort(function (a, b) {
+      return (a.msgs.length ? 1 : 0) - (b.msgs.length ? 1 : 0);
+    });
+    var unanswered = reqs.filter(function (r) { return !r.msgs.length; }).length;
+
+    /* which sport, in which postcode, is closest to actually working */
+    var board = sportIds().filter(function (id) { return !isLive(id); }).map(function (id) {
+      var b = bestArea(id), t = sp(id).threshold;
+      return { id:id, best:b, t:t, ratio:b.n / t };
+    }).sort(function (a, b) { return b.ratio - a.ratio; });
+
+    return nav({ title:"Admin", sub:"Leicester · every request lands here", back:true }) + "<main>" +
+      '<div class="reach">' + plural(unanswered, "request") + " waiting on you" +
+      (unanswered ? "." : " — all answered.") +
+      " Demand across " + AREAS.length + " postcodes below tells you which sport to open next, and <b>where</b>.</div>" +
+
+      '<h2 class="sec">Requests<span class="rule"></span></h2>' +
+      reqs.map(function (r) {
+        var s = sp(r.sport);
+        var answered = r.msgs.length > 0;
+        return '<button class="row" data-go="request" data-id="' + r.id + '">' + avatar(r.ini) +
+          '<span class="t"><b>' + esc(r.name) + (r.mine ? " (you)" : "") + "</b>" +
+          "<span>wants " + s.emoji + " " + s.name.toLowerCase() + " · " + esc(r.pc) + " · " + r.ago + " ago</span>" +
+          '<span class="taglist">' +
+          (answered ? '<span class="tag">Replied</span>'
+                    : '<span class="tag new">Needs a reply</span>') +
+          '<span class="tag">' + areaDemand(r.sport, r.pc) + "/" + s.threshold + " in " + esc(r.pc) + "</span>" +
+          "</span></span>" +
+          (answered ? '<span class="arw">›</span>' : '<span class="dot"></span>') + "</button>";
+      }).join("") +
+
+      '<h2 class="sec">Where to open next<span class="rule"></span></h2>' +
+      '<p class="copy" style="font-size:12.5px">A sport doesn\'t open "in Leicester" — it opens in a postcode, or it doesn\'t work at all. ' +
+      "The bar is the <b>best single area</b>, not the total, because that's the only number that means anything.</p>" +
+
+      board.map(function (row) {
+        var s = sp(row.id);
+        var pct = Math.min(100, Math.round(row.ratio * 100));
+        return '<div class="block">' +
+          '<div class="lr" style="font-size:14px"><span class="name">' + s.emoji + " " + s.name + "</span>" +
+          "<b>" + row.best.n + "/" + row.t + " in " + row.best.pc + "</b></div>" +
+          '<span class="meter' + (pct > 80 ? " close" : "") + '"><i style="width:' + pct + '%"></i></span>' +
+          AREAS.map(function (a) {
+            var d = areaDemand(row.id, a);
+            var w = Math.min(100, Math.round(d / row.t * 100));
+            return '<div class="lr" style="font-size:12px">' +
+              '<span style="width:44px; flex:none; color:var(--ink-3); font-weight:650">' + a + "</span>" +
+              '<span class="meter" style="flex:1; margin:0"><i style="width:' + w + '%; background:' +
+              (d >= row.t ? "var(--court)" : (a === row.best.pc ? "var(--accent)" : "var(--line)")) + '"></i></span>' +
+              '<span style="width:34px; flex:none; text-align:right; font-weight:700">' + d + "</span></div>";
+          }).join("") +
+          '<p class="note left">' + plural(row.t - row.best.n, "more person", "more people") + " in " + row.best.pc +
+          " and " + s.name.toLowerCase() + " opens there. " + plural(venuesFor(row.id).length, "venue") + " already on file.</p>" +
+          "</div>";
+      }).join("") +
+
+      '<p class="note" style="margin-top:8px">Prototype: you\'re the admin because it\'s your app. In the real thing this sits behind a separate login.</p>' +
+      "</main>";
+  };
+
+  V.request = function (id) {
+    var r = null;
+    for (var i = 0; i < S.requests.length; i++) if (S.requests[i].id === id) r = S.requests[i];
+    if (!r) return V.admin();
+    var s = sp(r.sport);
+    var d = areaDemand(r.sport, r.pc);
+    var waiting = S.requests.filter(function (x) { return x.sport === r.sport; }).length;
+
+    var msgs = r.msgs.map(function (m) {
+      return '<div class="msg' + (m.admin ? " me" : "") + '">' +
+        (m.admin ? "" : '<span class="who">' + esc(r.name) + "</span>") + esc(m.text) + "</div>";
+    }).join("");
+
+    return nav({ title:r.name, sub:"wants " + s.name.toLowerCase() + " · " + esc(r.pc), back:true }) +
+      '<main id="thread">' +
+      '<div class="block"><span class="bh">The ask</span>' +
+      '<div class="lr"><span class="name">Sport</span><b>' + s.emoji + " " + s.name + "</b></div>" +
+      '<div class="lr"><span class="name">Their area</span><b>' + esc(r.pc) + "</b></div>" +
+      '<div class="lr"><span class="name">Demand there</span><b>' + d + " of " + s.threshold + "</b></div>" +
+      '<div class="lr"><span class="name">Venues on file</span><b>' + venuesFor(r.sport).length + "</b></div>" +
+      '<div class="lr total"><span class="name">Others waiting on ' + s.name.toLowerCase() + "</span><b>" +
+      (waiting - 1) + "</b></div></div>" +
+
+      (waiting > 1
+        ? '<button class="btn ghost" data-act="broadcast" data-id="' + r.sport + '">Message all ' + waiting +
+          " waiting on " + s.name.toLowerCase() + "</button>"
+        : "") +
+
+      '<div class="thread">' + (msgs || '<p class="note">No reply yet. They tapped "I want this" and nothing has come back — which is exactly how you lose someone who was keen.</p>') + "</div>" +
+      "</main>" +
+      '<form class="composer" data-form="reply" data-id="' + r.id + '">' +
+      '<input type="text" placeholder="Reply to ' + esc(r.name.split(" ")[0]) + '…" autocomplete="off">' +
+      "<button type=\"submit\">Send</button></form>";
   };
 
   /* ---------------- render ---------------- */
@@ -1798,10 +1954,31 @@
     var id = el.getAttribute("data-id"), s = sp(id);
     if (S.wanted.indexOf(id) !== -1) return;
     var unlocked = countMeIn(id);
+
+    /* the tap isn't just a counter — it puts a human request in front of a human */
+    S.requests.unshift({ id:"r" + Date.now(), name:S.user.name, ini:S.user.ini, pc:S.user.pc,
+      sport:id, ago:"just now", mine:true, msgs:[] });
     save(); render();
+
     if (unlocked) { setTimeout(function () { celebrate(id); }, 350); return; }
-    toast("Counted. " + plural(s.threshold - S.demand[id], "more person", "more people") + " and " +
-      s.name.toLowerCase() + " opens here.");
+
+    toast("Counted — and we've told the team");
+    setTimeout(function () {
+      sheet('<div class="big">' + s.emoji + "</div><h3>You're number " + S.demand[id] + "</h3>" +
+        "<p>" + s.name + " needs " + plural(s.threshold - S.demand[id], "more person", "more people") +
+        " near " + esc(S.user.pc) + " before it opens. You'll be told the moment it does.</p>" +
+        "<p>Your request has also gone straight to the Hangout team — a real person sees it, and can come back to you. " +
+        "It's how we work out which sport to open next, and exactly where.</p>" +
+        btns([{ label:"Read about " + s.name.toLowerCase() + " anyway", act:"goto-sport", id:id },
+              { label:"Done", act:"close-sheet", cls:"ghost" }]));
+    }, 700);
+  };
+
+  A.broadcast = function (el) {
+    var id = el.getAttribute("data-id"), s = sp(id);
+    var n = S.requests.filter(function (x) { return x.sport === id; }).length;
+    closeSheet();
+    toast("Message sent to all " + n + " waiting on " + s.name.toLowerCase());
   };
   A["goto-sport"] = function (el) { closeSheet(); go("sport", el.getAttribute("data-id")); };
 
@@ -1982,6 +2159,23 @@
       }, 1800);
     }
 
+    if (kind === "reply") {
+      var r = null;
+      for (var j = 0; j < S.requests.length; j++) if (S.requests[j].id === id) r = S.requests[j];
+      if (!r) return;
+      r.msgs.push({ admin:true, text:text });
+      save(); render();
+      toast("Sent to " + r.name.split(" ")[0]);
+      if (!r.mine) {
+        setTimeout(function () {
+          r.msgs.push({ admin:false, text:"Thanks — appreciate you coming back to me. I'll keep an eye out." });
+          save();
+          if (view.name === "request" && view.arg === id) render();
+        }, 2000);
+      }
+      return;
+    }
+
     if (kind === "gmsg") {
       var g = game(id);
       g.msgs.push({ from:"me", text:text });
@@ -2009,6 +2203,7 @@
   if (!S.demand)   S.demand = JSON.parse(JSON.stringify(DEMAND_SEED));
   if (!S.wanted)   S.wanted = [];
   if (!S.unlocked) S.unlocked = [];
+  if (!S.requests) S.requests = seedRequests();
   if (!S.chats)    S.chats = {};
   if (!S.peopleFilter) S.peopleFilter = "all";
   if (S.user) {

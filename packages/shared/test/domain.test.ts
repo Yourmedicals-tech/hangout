@@ -10,8 +10,8 @@ import {
   isValidPlayerCount, splitSides, reliability, sortForFeed,
   clampRadius, bandFor, whereText, hiddenUntilYoureIn, primaryAction,
   rankByBestArea, MAX_RADIUS_MILES,
-} from "../src/domain.js";
-import type { PublicGame, MemberGame, RosterEntry } from "../src/types.js";
+} from "../src/domain";
+import type { PublicGame, MemberGame, RosterEntry } from "../src/types";
 
 const pub = (over: Partial<PublicGame> = {}): PublicGame => ({
   kind: "public",

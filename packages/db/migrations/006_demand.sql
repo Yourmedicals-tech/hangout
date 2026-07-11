@@ -123,9 +123,16 @@ select
   sa.want_count,
   sa.is_live,
   greatest(s.launch_threshold - sa.want_count, 0) as still_needed,
+  -- Venues you could actually PLAY at: within 25 miles of the area centroid,
+  -- NOT merely inside the same postcode. Padel4All is 6.9 miles from LE18 but
+  -- sits in LE3 — counting by postcode reported "0 venues ready" and gutted the
+  -- one line that makes somebody want the sport.
   (select count(*) from venue_sports vs
      join venues v on v.id = vs.venue_id
-    where vs.sport_id = s.id and v.area_id = sa.area_id) as venues_here
+     join areas  ar on ar.id = sa.area_id
+    where vs.sport_id = s.id
+      and ST_DWithin(v.location, ar.centroid,
+                     app.miles_to_metres(app.max_radius_miles()))) as venues_here
 from sport_areas sa
 join sports s on s.id = sa.sport_id
 join areas  a on a.id = sa.area_id

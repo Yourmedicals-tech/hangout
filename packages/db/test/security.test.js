@@ -167,7 +167,10 @@ async function asUser(userId, fn) {
       `member sees the roster by name: ${roster.rows.map((r) => r.display_name).join(", ")}`);
 
     const chat = await c.query("SELECT body FROM game_messages WHERE game_id=$1", [FRIDAY]);
-    check(chat.rowCount === 3, "member sees the group chat");
+    // >= not ==: the concurrency suite leaves system messages on this game, and a
+    // security test that depends on running first is a security test that will
+    // one day pass for the wrong reason.
+    check(chat.rowCount >= 3, `member sees the group chat (${chat.rowCount} messages)`);
   });
 
   // ══════════════════════════════════════════════════════════════════

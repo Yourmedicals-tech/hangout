@@ -1,2 +1,3 @@
-export * from "./types.js";
-export * from "./domain.js";
+export * from "./types";
+export * from "./domain";
+export * from "./mock-repo";

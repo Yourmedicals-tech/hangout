@@ -368,8 +368,11 @@
   var SPORTS = {
     badminton: {
       name:"Badminton", emoji:"🏸", live:true, threshold:20,
-      shape:"fixed", players:{ min:4, max:4, ideal:4 },
-      venue:"booked", cost:"split", setting:"indoor", season:"year-round",
+      players:{ typical:4, presets:[
+        { label:"Singles", n:2 }, { label:"Doubles", n:4 },
+        { label:"Rotating", n:6 }, { label:"Two courts", n:8 } ] },
+      teams:false,
+      venue:"booked", setting:"indoor", season:"year-round",
       levels:true, levelNames:["Beginner","Improver","Intermediate","Advanced"],
       kit:["Racket — spares usually available","Non-marking indoor trainers"],
       duration:60, defaultCost:20, weather:false,
@@ -381,8 +384,11 @@
     },
     cricket: {
       name:"Cricket", emoji:"🏏", live:true, threshold:20,
-      shape:"range", players:{ min:8, max:22, ideal:11 },
-      venue:"free", cost:"free", setting:"outdoor", season:"summer",
+      players:{ typical:12, presets:[
+        { label:"Nets", n:6 }, { label:"Six a side", n:12 },
+        { label:"Eight a side", n:16 }, { label:"Full XI", n:22 } ] },
+      teams:true,
+      venue:"free", setting:"outdoor", season:"summer",
       levels:false, levelNames:[],
       kit:["Bat and ball provided","Trainers","Sun cream — optimistic, this is Leicester"],
       duration:150, defaultCost:0, weather:true,
@@ -394,8 +400,11 @@
     },
     football: {
       name:"Football", emoji:"⚽", live:false, threshold:20,
-      shape:"sides", players:{ min:10, max:22, ideal:10 }, sides:{ n:2, perSide:5 },
-      venue:"booked", cost:"split", setting:"outdoor", season:"year-round",
+      players:{ typical:10, presets:[
+        { label:"5 a side", n:10 }, { label:"6 a side", n:12 },
+        { label:"7 a side", n:14 }, { label:"11 a side", n:22 } ] },
+      teams:true,
+      venue:"booked", setting:"outdoor", season:"year-round",
       levels:false, levelNames:[],
       kit:["Boots or astro trainers","Bring a light shirt and a dark one"],
       duration:60, defaultCost:55, weather:true,
@@ -403,8 +412,10 @@
     },
     padel: {
       name:"Padel", emoji:"🎾", live:false, threshold:20,
-      shape:"fixed", players:{ min:4, max:4, ideal:4 },
-      venue:"booked", cost:"split", setting:"outdoor", season:"year-round",
+      players:{ typical:4, presets:[
+        { label:"Singles", n:2 }, { label:"Doubles", n:4 }, { label:"Rotating", n:6 } ] },
+      teams:false,
+      venue:"booked", setting:"outdoor", season:"year-round",
       levels:true, levelNames:["Beginner","Improver","Intermediate","Advanced"],
       kit:["Padel bat — courts hire them out","Trainers"],
       duration:90, defaultCost:32, weather:false,
@@ -412,32 +423,40 @@
     },
     tennis: {
       name:"Tennis", emoji:"🥎", live:false, threshold:20,
-      shape:"fixed", players:{ min:2, max:4, ideal:4 },
-      venue:"booked", cost:"split", setting:"outdoor", season:"summer",
+      players:{ typical:4, presets:[
+        { label:"Singles", n:2 }, { label:"Doubles", n:4 }, { label:"Rotating", n:6 } ] },
+      teams:false,
+      venue:"booked", setting:"outdoor", season:"summer",
       levels:true, levelNames:["Beginner","Improver","Intermediate","Advanced"],
       kit:["Racket","Balls","Trainers"],
       duration:60, defaultCost:12, weather:true, guides:[]
     },
     pickleball: {
       name:"Pickleball", emoji:"🥒", live:false, threshold:20,
-      shape:"fixed", players:{ min:4, max:4, ideal:4 },
-      venue:"booked", cost:"split", setting:"indoor", season:"year-round",
+      players:{ typical:4, presets:[
+        { label:"Singles", n:2 }, { label:"Doubles", n:4 }, { label:"Rotating", n:8 } ] },
+      teams:false,
+      venue:"booked", setting:"indoor", season:"year-round",
       levels:true, levelNames:["Beginner","Improver","Intermediate","Advanced"],
       kit:["Paddle — usually provided","Indoor trainers"],
       duration:60, defaultCost:14, weather:false, guides:[]
     },
     squash: {
       name:"Squash", emoji:"🎯", live:false, threshold:20,
-      shape:"fixed", players:{ min:2, max:2, ideal:2 },
-      venue:"booked", cost:"split", setting:"indoor", season:"year-round",
+      players:{ typical:2, presets:[
+        { label:"Singles", n:2 }, { label:"Three rotating", n:3 }, { label:"Four rotating", n:4 } ] },
+      teams:false,
+      venue:"booked", setting:"indoor", season:"year-round",
       levels:true, levelNames:["Beginner","Improver","Intermediate","Advanced"],
       kit:["Racket","Eye guards","Indoor trainers"],
       duration:40, defaultCost:10, weather:false, guides:[]
     },
     running: {
       name:"Running", emoji:"👟", live:false, threshold:15,
-      shape:"range", players:{ min:2, max:30, ideal:8 },
-      venue:"free", cost:"free", setting:"outdoor", season:"year-round",
+      players:{ typical:8, presets:[
+        { label:"Pair", n:2 }, { label:"Small group", n:6 }, { label:"Big group", n:15 } ] },
+      teams:false,
+      venue:"free", setting:"outdoor", season:"year-round",
       levels:true, levelNames:["Couch to 5k","5k","10k","Half and up"],
       kit:["Trainers. That's it."],
       duration:45, defaultCost:0, weather:true, guides:[]
@@ -445,10 +464,10 @@
   };
   function sportIds() { return Object.keys(SPORTS); }
   function sp(id) { return SPORTS[id]; }
-  function defaultNeed(id) {
-    var s = sp(id);
-    return s.shape === "sides" ? s.sides.n * s.sides.perSide : s.players.ideal;
-  }
+  /* A typical count, never a fixed one. Badminton is doubles more often than
+     not — but it's also singles, six rotating, or eight across two courts.
+     The sport suggests; the host decides. Nothing here is locked. */
+  function defaultNeed(id) { return sp(id).players.typical; }
 
   /* VENUES — a finite, knowable list. Seeded before a single user exists,
      which is why the app is never truly empty. */
@@ -472,7 +491,8 @@
 
   /* PEOPLE — each with an attendance record, because no-shows are the disease */
   var COLORS = { AR:"#3C7A5A", PR:"#7A4E9B", TM:"#2F6F8F", RJ:"#B0653C", ME:"#8F4358",
-                 DK:"#4A6B8A", CW:"#6B7A3C", SM:"#8A5A3C", VK:"#3C6B7A", JO:"#7A3C5A", AM:"#5A7A3C" };
+                 DK:"#4A6B8A", CW:"#6B7A3C", SM:"#8A5A3C", VK:"#3C6B7A", JO:"#7A3C5A", AM:"#5A7A3C",
+                 NA:"#8A6B3C" };
   var PEOPLE = [
     { id:"ar", name:"Arjun R.", first:"Arjun", ini:"AR", far:0.8, plays:["cricket","badminton"],
       levels:{ badminton:"Improver" }, record:{ played:4, missed:0 }, tag:"New to Leicester", tagNew:true },
@@ -560,7 +580,8 @@
   function seedGames() {
     return [
       { id:"g1", sport:"badminton", title:"Friday doubles", venueId:"v1", court:"Court 3",
-        day:nextDow(5), time:"7:00pm", cost:20, need:4, host:"tm",
+        day:nextDow(5), time:"7:00pm", cost:20, need:4, teams:false, host:"tm",
+        /* classic doubles — four. The Tuesday ladder is six. Both are badminton. */
         repeats:true, regulars:["tm","pr","dk","cw"],
         players:[p2p("tm"), p2p("pr"), p2p("dk")], waitlist:[], out:["cw"],
         level:"any", beginners:true,
@@ -572,7 +593,7 @@
           { from:"tm", text:"Putting it on Hangout then. Someone will turn up." }
         ] },
       { id:"g2", sport:"cricket", title:"Sunday tape-ball", venueId:"v4", court:"Top field",
-        day:nextDow(0), time:"10:00am", cost:0, need:11, host:"rj",
+        day:nextDow(0), time:"10:00am", cost:0, need:12, teams:true, host:"rj",
         repeats:true, regulars:["rj","cw","ar","dk","sm","vk"],
         players:[p2p("rj"), p2p("cw"), p2p("ar"), p2p("dk"), p2p("sm"), p2p("vk"),
                  { id:"x3", name:"Joe", ini:"JO" }, { id:"x4", name:"Amit", ini:"AM" }],
@@ -581,14 +602,15 @@
         booked:true, hostPaid:false, paid:[], cancelled:false,
         msgs:[{ from:"rj", text:"Usual spot, 10am. Bring a jumper." }] },
       { id:"g3", sport:"badminton", title:"Tuesday singles ladder", venueId:"v5", court:"Courts 1–2",
-        day:nextDow(2), time:"8:00pm", cost:16, need:4, host:"dk",
-        repeats:true, regulars:["dk","pr","me","tm"],
-        players:[p2p("dk"), p2p("pr"), p2p("me"), p2p("tm")], waitlist:[], out:[],
+        day:nextDow(2), time:"8:00pm", cost:16, need:6, teams:false, host:"dk",
+        repeats:true, regulars:["dk","pr","me","tm","ar"],
+        players:[p2p("dk"), p2p("pr"), p2p("me"), p2p("tm"), p2p("ar"), { id:"x5", name:"Nadia", ini:"NA" }],
+        waitlist:[], out:[],
         level:"Intermediate", beginners:false,
-        note:"Competitive. We rotate singles matches. Intermediate and up, honestly.",
+        note:"Six of us, rotating singles. Not four — badminton is whatever you make it. Intermediate and up.",
         booked:true, hostPaid:true, paid:["dk","pr"], cancelled:false, msgs:[] },
       { id:"g4", sport:"cricket", title:"Thursday hardball nets", venueId:"v3", court:"Net 2",
-        day:nextDow(4), time:"6:30pm", cost:24, need:6, host:"cw",
+        day:nextDow(4), time:"6:30pm", cost:24, need:6, teams:false, host:"cw",
         repeats:false, regulars:[], players:[p2p("cw"), p2p("ar"), p2p("rj")],
         waitlist:[], out:[], level:"any", beginners:false,
         note:"Hardball nets. Bring your kit if you've got it — spares available.",
@@ -873,15 +895,16 @@
         '<span class="rep ' + r.cls + '">' + r.txt + "</span></div>";
     }).join("");
 
-    /* sides, for sports that have them */
+    /* sides — only if the host asked for them, and they balance at any count */
     var teams = "";
-    if (s.shape === "sides" && g.players.length) {
+    if (g.teams && g.players.length) {
       var a = [], b = [];
       g.players.forEach(function (p, i) { (i % 2 ? b : a).push(p.name); });
-      teams = '<div class="block"><span class="bh">Sides · ' + s.sides.perSide + " a side</span>" +
+      var perSide = Math.floor(g.need / 2);
+      teams = '<div class="block"><span class="bh">Sides · aiming for ' + perSide + " a side</span>" +
         '<div class="lr"><span class="name">Bibs</span><b>' + esc(a.join(", ") || "—") + "</b></div>" +
         '<div class="lr"><span class="name">Non-bibs</span><b>' + esc(b.join(", ") || "—") + "</b></div>" +
-        '<p class="note left">Sides rebalance automatically as people join and drop out.</p></div>';
+        '<p class="note left">Sides rebalance as people join and drop out. Uneven is fine — it usually is.</p></div>';
     }
 
     var waitBlock = g.waitlist.length
@@ -1023,34 +1046,32 @@
     }
     var d = S.post, s = sp(d.sport), vs = venuesFor(d.sport);
 
-    /* the players field is a different question for every shape of sport */
-    var playersField;
-    if (s.shape === "fixed") {
-      playersField = '<div class="field"><label>Players</label>' +
-        '<input type="text" value="' + s.players.ideal + ", always" + '" disabled>' +
-        '<span class="hint">' + s.name + " is always " + s.players.ideal + ". Nothing to decide.</span></div>";
-    } else if (s.shape === "sides") {
-      playersField = '<div class="field"><label for="p-need">Format</label><select id="p-need">' +
-        [5, 6, 7, 11].map(function (n) {
-          return '<option value="' + (n * 2) + '"' + (d.need === n * 2 ? " selected" : "") + ">" +
-            n + " a side · " + (n * 2) + " players</option>";
-        }).join("") + "</select>" +
-        '<span class="hint">Sides get balanced automatically as people join.</span></div>';
-    } else {
-      playersField = '<div class="field"><label for="p-need">Players needed</label>' +
-        '<input id="p-need" type="number" min="' + s.players.min + '" max="' + s.players.max + '" value="' + d.need + '">' +
-        '<span class="hint">' + s.name + " works with anything from " + s.players.min + " to " + s.players.max + ".</span></div>";
-    }
+    /* Presets are shortcuts, not rules. The number is always yours to change. */
+    var playersField = '<div class="field"><label for="p-need">How many players?</label>' +
+      '<div class="chips">' + s.players.presets.map(function (p) {
+        return '<button class="chip" data-act="post-need" data-v="' + p.n + '" aria-pressed="' + (d.need === p.n) + '">' +
+          p.label + " · " + p.n + "</button>";
+      }).join("") + "</div>" +
+      '<input id="p-need" type="number" min="2" max="50" value="' + d.need + '">' +
+      '<span class="hint">Shortcuts above, or type any number. <b>Nothing is fixed</b> — ' +
+      s.name.toLowerCase() + " is whatever you and the people turning up decide it is.</span></div>" +
+      (s.teams
+        ? '<button class="pick" data-act="post-teams" aria-pressed="' + d.teams + '">' +
+          '<span class="ico">🎽</span><span class="t"><b>Split into two sides</b>' +
+          "<span>We'll balance the teams as people join and drop out</span></span>" +
+          '<span class="tick">✓</span></button>'
+        : "");
 
-    /* cost follows the VENUE, not the sport — a park is free, the nets are £24 */
+    /* Cost follows the venue, not the sport — and it's still editable. A free
+       park game might still cost a fiver if you're chipping in for a new ball. */
     var chosen = venue(d.venueId);
-    var costField = chosen.price === 0
-      ? '<div class="field"><label>Cost</label><input type="text" value="Free — public space" disabled>' +
-        "<span class=\"hint\">" + esc(chosen.name) + " costs nothing and needs no booking. That's half the appeal.</span></div>"
-      : '<div class="field"><label for="p-cost">' + (s.shape === "sides" ? "Pitch" : "Court") + " cost (£)</label>" +
-        '<input id="p-cost" type="number" min="0" step="1" value="' + d.cost + '">' +
-        '<span class="hint">' + esc(chosen.name) + " is about £" + chosen.price + " per " + (chosen.unit || "session") +
-        ". You pay them up front; everyone pays <b>you</b> back. We never hold the money.</span></div>";
+    var costField = '<div class="field"><label for="p-cost">Cost to hire (£)</label>' +
+      '<input id="p-cost" type="number" min="0" step="1" value="' + d.cost + '">' +
+      '<span class="hint">' +
+      (chosen.price === 0
+        ? esc(chosen.name) + " is free and needs no booking — but put something in if you're all chipping in for kit."
+        : esc(chosen.name) + " is about £" + chosen.price + " per " + (chosen.unit || "session") + ".") +
+      " Leave it at <b>0</b> for a free game. You pay the venue; everyone pays <b>you</b> back.</span></div>";
 
     var levelField = s.levels
       ? '<div class="field"><label>Level</label><div class="chips">' +
@@ -1170,15 +1191,15 @@
     var players = PEOPLE.filter(function (p) { return p.plays.indexOf(id) !== -1; });
     var togo = s.threshold - S.demand[id];
 
-    var shape = s.shape === "fixed" ? s.players.ideal + " players, always"
-      : s.shape === "sides" ? s.sides.perSide + " a side · " + (s.sides.n * s.sides.perSide) + " players"
-      : s.players.min + " to " + s.players.max + " players";
+    var shape = "usually " + s.players.typical + ", but anything goes";
 
     return nav({ title:s.emoji + " " + s.name,
         sub:live ? "Live near you" : S.demand[id] + " of " + s.threshold + " people needed", back:true }) +
       "<main>" +
       '<div class="block"><span class="bh">The shape of the game</span>' +
       '<div class="lr"><span class="name">Players</span><b>' + shape + "</b></div>" +
+      '<div class="lr"><span class="name">People play it as</span><b>' +
+      s.players.presets.map(function (p) { return p.label.toLowerCase() + " (" + p.n + ")"; }).join(", ") + "</b></div>" +
       '<div class="lr"><span class="name">Where</span><b>' + (s.venue === "free" ? "Public space" : "Booked venue") + "</b></div>" +
       '<div class="lr"><span class="name">Cost near you</span><b>' + costRange(vs) + "</b></div>" +
       '<div class="lr"><span class="name">Session</span><b>' + s.duration + " min · " + s.setting + "</b></div>" +
@@ -1509,7 +1530,8 @@
   function defaultPost(sport) {
     var v = venuesFor(sport)[0] || VENUES[0];
     return { sport:sport, title:"", day:0, time:"7:00pm", venueId:v.id,
-      need:defaultNeed(sport), cost:v.price, note:"", repeats:false, beginners:true, level:"any" };
+      need:defaultNeed(sport), cost:v.price, note:"", repeats:false, beginners:true,
+      level:"any", teams:!!sp(sport).teams };
   }
   A["new-game"] = function () {
     var live = myLiveSports();
@@ -1791,9 +1813,9 @@
     S.games.unshift({
       id:"seed-" + id, sport:id,
       title:id === "football" ? "Sunday five-a-side" : "First " + s.name.toLowerCase() + " session",
-      venueId:v.id, court:s.shape === "sides" ? "Pitch 2" : "Court 1",
+      venueId:v.id, court:s.teams ? "Pitch 2" : "Court 1",
       day:nextDow(id === "football" ? 0 : 6), time:"6:30pm",
-      cost:v.price, need:defaultNeed(id),
+      cost:v.price, need:defaultNeed(id), teams:!!s.teams,
       host:starters[0].id, repeats:true, regulars:starters.map(function (p) { return p.id; }),
       players:starters.map(function (p) { return p2p(p.id); }), waitlist:[], out:[],
       level:"any", beginners:true, cancelled:false,
@@ -1832,6 +1854,8 @@
     S.post.repeats = keep.repeats; S.post.beginners = keep.beginners;
     save(); render();
   };
+  A["post-need"]      = function (el) { grabPost(); S.post.need = parseInt(el.getAttribute("data-v"), 10); save(); render(); };
+  A["post-teams"]     = function ()   { grabPost(); S.post.teams = !S.post.teams; save(); render(); };
   A["post-level"]     = function (el) { grabPost(); S.post.level = el.getAttribute("data-v"); save(); render(); };
   A["post-repeat"]    = function ()   { grabPost(); S.post.repeats = !S.post.repeats; save(); render(); };
   A["post-beginners"] = function ()   { grabPost(); S.post.beginners = !S.post.beginners; save(); render(); };
@@ -1845,10 +1869,11 @@
 
     var g = {
       id:"u" + Date.now(), sport:d.sport, title:d.title.trim(), venueId:d.venueId,
-      court:s.shape === "sides" ? "Pitch 1" : "Court 1",
+      court:s.teams ? "Pitch 1" : "Court 1",
       day:when.getTime(), time:d.time,
       cost:d.cost,
-      need:s.shape === "fixed" ? s.players.ideal : d.need,
+      need:d.need,
+      teams:!!d.teams,
       host:"me", repeats:d.repeats, regulars:d.repeats ? ["me"] : [],
       players:[{ id:"me", name:S.user.name, ini:S.user.ini }], waitlist:[], out:[],
       level:d.level, beginners:d.beginners, note:d.note.trim(),

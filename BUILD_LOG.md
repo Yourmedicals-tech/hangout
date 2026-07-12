@@ -32,13 +32,14 @@ npm test
 
 | Suite | Checks | What it actually proves |
 |---|---|---|
-| `packages/db/test/security.test.js` | **33** | A non-member of a game cannot read the venue, the court, the roster or the chat. Zero rows — not a filtered answer. |
-| `packages/db/test/race.test.js` | **16** | 10 people tapping "I'm in" on a 1-spot game → exactly 1 gets in. And the naive version double-books, so the lock is doing work. |
-| `packages/shared/test/domain.test.ts` | **20** | Money, player counts, reliability, density, the ladder. |
-| `packages/shared/test/mock-repo.test.ts` | **18** | The mock is *no more permissive than Postgres*. |
-| Expo app (browser-driven) | **23** | The ladder is visible on screen: a stranger genuinely cannot read "Active Wigston" anywhere. |
+| `db/test/security.test.js` | **36** | A non-member cannot read the venue, court, roster or chat. Zero rows — not a filtered answer, no answer. |
+| `db/test/race.test.js` | **16** | 10 people tap "I'm in" on a 1-spot game → exactly 1 gets in. The *naive* version double-books, so the lock is proven load-bearing. |
+| `db/test/notify.test.js` | **26** | Who gets told — and, mostly, **who does not**. |
+| `db/test/weekly.test.js` | **14** | Silence is not a yes. The standing fixture. |
+| `shared/test/*.test.ts` | **45** | Money in integer pence, the ladder as a type, the mock no more permissive than Postgres, the push outbox. |
+| Expo app (browser-driven) | **48** | The ladder is visible on screen; the weekly prompt appears and disappears; the admin board ranks by best area. |
 
-**110 checks. All passing.**
+**185 checks. All passing.**
 
 ### The one I'd point at first
 
@@ -137,6 +138,78 @@ crashes is a test that isn't testing.
 
 ---
 
+## Iteration 2 — push notifications
+
+The core loop **is** the push. So the thing that had to be right was never the
+transport (Expo and Apple will deliver the bytes) — it was the **audience**.
+
+It fails in two directions and both end the app:
+
+- **too narrow** → the person who would have turned up never hears, the court sits empty
+- **too wide** → you ping a beginner about a competitive game 22 miles away, they turn
+  notifications off, and you can **never reach them again**
+
+Notification permission is a one-way door. You get to be wrong about this twice.
+So most of `notify.test.js` asserts on who is **not** woken up.
+
+**A real bug it caught:** Priya dropped out of the Friday game and was instantly
+pinged *"🏸 2 spots just opened"* — about the spot **she had just vacated**. Absurd,
+and the first thing a user would screenshot.
+
+**The push body must not leak the venue.** A push is read on a lock screen, in
+public, by whoever is looking over your shoulder. The disclosure ladder does not
+get a holiday because the text is short. A `spot_open` push says *"0.3 miles
+away"*. A `let_in` push — sent only to someone who is now a member — names Grace
+Road.
+
+**The outbox.** The transaction writes a row and sends nothing. Calling Expo's API
+inside the transaction would hold the row lock on `games` while an HTTP call
+hangs (nobody in Leicester can join anything), and a rollback *after* the send
+means 38 people were told about a spot that doesn't exist. The worker uses
+`FOR UPDATE SKIP LOCKED`, so two workers never send the same push twice.
+
+Runs end to end **today, with zero credentials**:
+
+```bash
+npm run worker -- --once     # ConsoleSender prints the push instead of posting it
+```
+
+**When to ask for permission** is documented in `apps/mobile/src/push.ts`: never on
+launch (you'll be declined forever before showing any value) — but right after
+someone joins their first game, when the ask writes itself: *"Want to know if
+someone drops out?"* That isn't a permission request. That's the product.
+
+---
+
+## Iteration 3 — the standing fixture, and the admin console
+
+**Silence is not a yes.** An unanswered regular is a question, never an
+attendance. Treat it as a yes and the host turns up to a booked court expecting
+six and finds two. The weekly prompt has two buttons and **no way to dismiss it**
+— both options are an answer — and it vanishes the moment you answer, either way.
+
+**Saying no does not remove you from the crew.** "I can't make Friday" is not
+"take me off the list forever". Conflating those is how apps quietly shed their
+most loyal users.
+
+**An RLS bug the test caught, and it was a bad one:** saying "can't make it"
+removes you from the roster — and the disclosure ladder then treated you as a
+**stranger to your own standing fixture**. You could no longer see the game, or
+even the prompt asking whether you were in. Say no to the Friday badminton once
+and it disappears from your app forever. Fixed with `app.is_regular()`, plus a
+test proving the door did **not** open for anyone else.
+
+**The admin console** ranks sports by their **best single postcode, never the
+total**. "34 people in Leicester want padel" is a vanity number: spread across
+five postcodes, not one of them can get a game. Football (19 in LE18) correctly
+outranks padel (25 across three postcodes, best pile 12).
+
+It immediately surfaced something real in the seed data: **running is at 18/15 in
+LE2 — already over its threshold and ready to open**, and nothing else would have
+told you.
+
+---
+
 ## What I did NOT build
 
 Being straight about the gaps:
@@ -144,13 +217,12 @@ Being straight about the gaps:
 - **Auth.** MockRepo signs you in instantly. Real sign-up needs Supabase Auth. I'd
   use **phone OTP** — the friction is worth it, because it's one account per human
   and it makes ban-evasion expensive.
-- **Push notifications.** The core loop *is* the push. Needs Expo Notifications +
-  a real device + a Supabase Edge Function to fan out on "someone dropped out".
-  This is the single most important thing to build next.
-- **The admin console.** The schema is there (`sport_requests`, `admin_demand`,
-  ranked by best *area* not total). No screen yet.
-- **Weekly "are you in?" prompts** for recurring games. Tables exist
-  (`game_regulars`, `game_absences`); the cron job doesn't.
+- **Actually delivering a push to a phone.** The fan-out, the outbox, the worker and
+  the client registration are all built and tested. What's missing is an Expo
+  account and `npx expo install expo-notifications expo-device` — then swap
+  `ConsoleSender` for `ExpoPushSender`.
+- **The cron that fires the weekly ask.** `app.enqueue_weekly_prompts()` exists and
+  is tested. It needs `pg_cron` (or a Supabase scheduled function) to call it.
 - **Payments.** Deliberately. Stripe Connect, and only once people are actually
   playing.
 - **Navigation library.** I hand-rolled a small navigator to keep the dependency
@@ -160,11 +232,11 @@ Being straight about the gaps:
 
 ## Next, in the order I'd do it
 
-1. **Push notifications.** Without them there is no product — the whole thing is
-   "somebody dropped out, and forty people found out in ten seconds."
-2. **Supabase project + auth**, so the data is shared rather than trapped on one phone.
-3. **The weekly in/out prompt.** Most real sport is a standing fixture.
-4. **Admin console** on the existing schema.
+1. **Supabase project + auth.** This is now the only thing standing between the
+   code and real users. The data is trapped on one phone until it exists.
+2. **Turn the push on for real** — Expo account, then one line.
+3. **pg_cron** for the weekly ask.
+4. **Payments** (Stripe Connect), and only once people are actually playing.
 
 The scaling work is done and it was never the problem: this architecture carries
 20,000 users on about £50/month, and roughly half a million before anything needs

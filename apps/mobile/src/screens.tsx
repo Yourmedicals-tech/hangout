@@ -11,9 +11,10 @@ import { View, Text, Pressable, TextInput, Alert, ActivityIndicator } from "reac
 import {
   isMember, type Game, type PublicGame, type Sport, type SportId,
   type Person, type SportDemand, type Repo, type Venue, type WeeklyPrompt,
+  type SportRequest,
   myShare, formatMoney, reliability, sortForFeed, whereText,
   hiddenUntilYoureIn, primaryAction, splitSides, isValidPlayerCount,
-  hostIsOutOfPocket,
+  hostIsOutOfPocket, bestAreaFor,
 } from "@hangout/shared";
 import {
   Screen, Body, Nav, Button, Card, Block, Label, Row, P, Note, Tag, Pip,
@@ -737,11 +738,146 @@ export function PostGame({ sports, venues, onPost, onBack, onPickSport, sportId 
   );
 }
 
+/* ══════════════════════════════════════════════════════ Admin */
+
+/**
+ * The admin console.
+ *
+ * Two things, and the second is the one that matters.
+ *
+ * 1. Every "I want this" tap lands here, in front of a human. It is not a silent
+ *    counter. In the early days the founder IS the growth engine, and a request
+ *    that nobody answers is a keen person who has already gone.
+ *
+ * 2. WHERE TO OPEN NEXT — ranked by the BEST SINGLE POSTCODE, never the total.
+ *    "34 people in Leicester want padel" is a vanity number: spread across five
+ *    postcodes, not one of them can get a game. Launch on the strength of that
+ *    34 and you open three empty courts in three places. The only figure that
+ *    means anything is the biggest pile in one place.
+ */
+export function Admin({ requests, demand, sports, onBack, onReply }: {
+  requests: SportRequest[]; demand: SportDemand[]; sports: Sport[];
+  onBack: () => void; onReply: (id: string) => void;
+}) {
+  const t = useTheme();
+  const unanswered = requests.filter((r) => !r.answered);
+  const sportOf = (id: SportId) => sports.find((s) => s.id === id);
+
+  // Rank the locked sports by their best single area. Not the total. Never the total.
+  const board = sports
+    .filter((s) => !s.globallyLive)
+    .map((s) => ({ sport: s, best: bestAreaFor(s.id, demand) }))
+    .filter((x) => !!x.best)
+    .sort((a, b) =>
+      (b.best!.wantCount / b.best!.threshold) - (a.best!.wantCount / a.best!.threshold));
+
+  return (
+    <Screen>
+      <Nav title="Admin" sub="Leicester · every request lands here" onBack={onBack} />
+      <Body>
+        <View style={{ backgroundColor: t.ink, borderRadius: 14, padding: 15 }}>
+          <Text style={{ color: t.paper, fontSize: 13.5, lineHeight: 20 }}>
+            <Text style={{ fontWeight: "800" }}>{unanswered.length}</Text>
+            {unanswered.length === 1 ? " request" : " requests"} waiting on you.
+            {"\n"}Demand below is broken down by <Text style={{ fontWeight: "800" }}>postcode</Text> —
+            because a sport doesn't open "in Leicester". It opens in LE18, or it doesn't open at all.
+          </Text>
+        </View>
+
+        <Label>Requests</Label>
+        {requests.length === 0 && <Note>Nobody has asked for a sport yet.</Note>}
+        {requests.map((r) => {
+          const s = sportOf(r.sportId);
+          return (
+            <Card key={r.id} tone={r.answered ? "plain" : "ask"} onPress={() => onReply(r.id)}>
+              <Row
+                left={
+                  <View>
+                    <Text style={{ fontSize: 15, fontWeight: "700", color: t.ink }}>
+                      {r.personName}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: t.ink2 }}>
+                      wants {s?.emoji} {s?.name.toLowerCase()} · {r.areaId}
+                    </Text>
+                  </View>
+                }
+                right={
+                  <View style={{ alignItems: "flex-end", gap: 4 }}>
+                    <Tag tone={r.answered ? "plain" : "new"}>
+                      {r.answered ? "Replied" : "Needs a reply"}
+                    </Tag>
+                    {/* demand in THEIR postcode — the only number that means anything */}
+                    <Tag>{r.demandHere}/{r.threshold} in {r.areaId}</Tag>
+                  </View>
+                }
+              />
+            </Card>
+          );
+        })}
+
+        <Label>Where to open next</Label>
+        <Note>
+          Ranked by the best single area, not the total. Twelve padel players spread over five
+          postcodes isn't a market — it's five empty courts.
+        </Note>
+
+        {board.map(({ sport, best }) => (
+          <Block key={sport.id}>
+            <Row
+              left={
+                <Text style={{ fontSize: 15, fontWeight: "700", color: t.ink }}>
+                  {sport.emoji} {sport.name}
+                </Text>
+              }
+              right={
+                <Text style={{ fontSize: 14, fontWeight: "800", color: t.ink }}>
+                  {best!.wantCount}/{best!.threshold} in {best!.areaId}
+                </Text>
+              }
+            />
+            <Meter value={best!.wantCount} max={best!.threshold}
+                   tone={best!.wantCount / best!.threshold > 0.8 ? "close" : undefined} />
+
+            {/* the per-postcode breakdown — where the decision actually gets made */}
+            {demand
+              .filter((d) => d.sportId === sport.id)
+              .sort((a, b) => b.wantCount - a.wantCount)
+              .map((d) => (
+                <View key={d.areaId} style={[styles.row, { gap: 8 }]}>
+                  <Text style={{
+                    width: 42, fontSize: 11.5, fontWeight: "700",
+                    color: d.areaId === best!.areaId ? t.accent : t.ink3,
+                  }}>{d.areaId}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Meter value={d.wantCount} max={best!.threshold} />
+                  </View>
+                  <Text style={{
+                    width: 26, textAlign: "right", fontSize: 11.5, fontWeight: "700", color: t.ink2,
+                  }}>{d.wantCount}</Text>
+                </View>
+              ))}
+
+            <Note tone={best!.threshold - best!.wantCount === 1 ? "amber" : undefined}>
+              {best!.threshold - best!.wantCount <= 0
+                ? `${sport.name} is ready to open in ${best!.areaId}.`
+                : `${best!.threshold - best!.wantCount} more ${
+                    best!.threshold - best!.wantCount === 1 ? "person" : "people"
+                  } in ${best!.areaId} and ${sport.name.toLowerCase()} opens there. ` +
+                  `${demand.filter((d) => d.sportId === sport.id).length} postcodes tracked.`}
+            </Note>
+          </Block>
+        ))}
+      </Body>
+    </Screen>
+  );
+}
+
 /* ══════════════════════════════════════════════════════ You */
 
-export function You({ name, area, radius, attended, missed, onRadius }: {
+
+export function You({ name, area, radius, attended, missed, onRadius, onAdmin }: {
   name: string; area: string; radius: number; attended: number; missed: number;
-  onRadius: (m: number) => void;
+  onRadius: (m: number) => void; onAdmin: () => void;
 }) {
   const t = useTheme();
   const r = reliability({ gamesAttended: attended, gamesMissed: missed });
@@ -764,6 +900,14 @@ export function You({ name, area, radius, attended, missed, onRadius }: {
           <Note>
             25 miles is the hard cap, and the database enforces it — past that you're not finding a
             neighbour, you're finding a stranger you'll drive an hour to meet once.
+          </Note>
+        </Block>
+
+        <Block title="Admin">
+          <Button label="Requests and demand" kind="ghost" onPress={onAdmin} />
+          <Note>
+            Every "I want this" tap lands in front of a human. And demand is broken down by
+            postcode, because that is the only level at which a sport can actually open.
           </Note>
         </Block>
 

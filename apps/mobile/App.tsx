@@ -15,10 +15,10 @@ import { SafeAreaView, View, Alert, ActivityIndicator, useColorScheme } from "re
 import {
   MockRepo, type Repo, type Profile, type Sport, type SportId,
   type PublicGame, type Game, type Person, type SportDemand, type Venue,
-  type WeeklyPrompt,
+  type WeeklyPrompt, type SportRequest,
 } from "@hangout/shared";
 import {
-  Welcome, PickSports, Home, GameDetail, Sports, People, PostGame, You, Tabs,
+  Welcome, PickSports, Home, GameDetail, Sports, People, PostGame, You, Admin, Tabs,
 } from "./src/screens";
 import { useTheme } from "./src/theme";
 
@@ -32,7 +32,7 @@ const repo: Repo = new MockRepo();
 type Route =
   | { name: "welcome" } | { name: "pick" } | { name: "home" }
   | { name: "game"; id: string } | { name: "post" }
-  | { name: "sports" } | { name: "people" } | { name: "you" };
+  | { name: "sports" } | { name: "people" } | { name: "you" } | { name: "admin" };
 
 const TABS = new Set(["home", "sports", "people", "you"]);
 
@@ -48,6 +48,7 @@ export default function App() {
   const [game, setGame] = useState<Game | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
   const [prompts, setPrompts] = useState<WeeklyPrompt[]>([]);
+  const [requests, setRequests] = useState<SportRequest[]>([]);
   const [demand, setDemand] = useState<SportDemand[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [postSport, setPostSport] = useState<SportId>("badminton");
@@ -73,6 +74,7 @@ export default function App() {
       setGames(await repo.gamesNearMe());
       setPeople(await repo.peopleNearMe());
       setPrompts(await repo.weeklyPrompts());
+      if (p.isAdmin) setRequests(await repo.sportRequests());
     }
     setBusy(false);
   }, []);
@@ -190,6 +192,21 @@ export default function App() {
         }}
       />
     );
+  } else if (route.name === "admin") {
+    screen = (
+      <Admin
+        requests={requests}
+        demand={demand}
+        sports={sports}
+        onBack={back}
+        onReply={async (id) => {
+          await repo.replyToRequest(id, "Thanks — I'll shout the moment it opens.");
+          await refresh();
+          Alert.alert("Replied",
+            "In the real app this opens a thread. The point is that a human sees the request and a human answers it.");
+        }}
+      />
+    );
   } else if (route.name === "people") {
     screen = <People people={people} />;
   } else if (route.name === "you") {
@@ -201,6 +218,7 @@ export default function App() {
         attended={me.gamesAttended}
         missed={me.gamesMissed}
         onRadius={async (m) => { await repo.setRadius(m); await refresh(); }}
+        onAdmin={() => go({ name: "admin" })}
       />
     );
   } else {

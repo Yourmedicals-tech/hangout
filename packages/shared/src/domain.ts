@@ -209,3 +209,20 @@ export function rankByBestArea(
     }))
     .sort((x, y) => y.ratio - x.ratio);
 }
+
+/**
+ * For one sport, which postcode is closest to actually working?
+ *
+ * Deliberately returns the biggest single pile, NOT the sum. "34 people in
+ * Leicester want padel" is a vanity number: spread across five postcodes, not
+ * one of them can get a game. Launch on the strength of the total and you open
+ * three empty courts in three places.
+ */
+export function bestAreaFor(
+  sportId: string,
+  demand: Array<{ sportId: string; areaId: string; areaName: string; wantCount: number; threshold: number }>,
+): { areaId: string; areaName: string; wantCount: number; threshold: number } | null {
+  const mine = demand.filter((d) => d.sportId === sportId);
+  if (mine.length === 0) return null;
+  return mine.reduce((best, d) => (d.wantCount > best.wantCount ? d : best));
+}

@@ -216,6 +216,21 @@ export interface WeeklyPrompt {
   regulars: number;
 }
 
+/** A request from a real person for a sport we haven't opened. It is not a
+ *  silent counter: it lands in front of a human, and that human can answer. */
+export interface SportRequest {
+  id: string;
+  personName: string;
+  initials: string;
+  sportId: SportId;
+  areaId: string;
+  createdAt: string;
+  answered: boolean;
+  /** demand in THEIR postcode — the only number that means anything */
+  demandHere: number;
+  threshold: number;
+}
+
 export type JoinOutcome =
   | "joined" | "asked" | "waitlisted" | "already_in"
   | "already_asked" | "cancelled" | "not_live";
@@ -248,6 +263,9 @@ export interface Repo {
   becomeRegular(gameId: string): Promise<void>;
 
   demand(): Promise<SportDemand[]>;
+  /** Admin only. Every "I want this" tap, oldest unanswered first. */
+  sportRequests(): Promise<SportRequest[]>;
+  replyToRequest(id: string, body: string): Promise<void>;
   /** true if YOU were the one who tipped the sport over its threshold. */
   wantSport(sportId: SportId): Promise<boolean>;
 

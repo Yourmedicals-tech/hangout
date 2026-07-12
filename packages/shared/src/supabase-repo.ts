@@ -253,6 +253,27 @@ export class SupabaseRepo implements Repo {
     }));
   }
 
+  /** Admin inbox. RLS on sport_requests already restricts this to admins. */
+  async sportRequests(): Promise<import("./types").SportRequest[]> {
+    const rows = unwrap(await this.sb.from("sport_requests")
+      .select("id, sport_id, area_id, created_at, profiles(display_name, initials), sport_request_messages(id)")
+      .order("created_at", { ascending: false }));
+    return rows.map((r: any) => ({
+      id: r.id,
+      personName: r.profiles?.display_name ?? "Someone",
+      initials: r.profiles?.initials ?? "?",
+      sportId: r.sport_id, areaId: r.area_id,
+      createdAt: r.created_at,
+      answered: (r.sport_request_messages?.length ?? 0) > 0,
+      demandHere: 0, threshold: 20,
+    }));
+  }
+
+  async replyToRequest(id: string, body: string): Promise<void> {
+    unwrap(await this.sb.from("sport_request_messages")
+      .insert({ request_id: id, from_admin: true, body }));
+  }
+
   async wantSport(sportId: SportId): Promise<boolean> {
     return unwrap(await this.sb.rpc("want_sport", { p_sport_id: sportId })) as boolean;
   }

@@ -22,7 +22,7 @@
 import type {
   Repo, Profile, Sport, SportId, Area, Venue, Person,
   PublicGame, MemberGame, Game, JoinOutcome, PostGameInput,
-  SportDemand, RosterEntry, GameMessage, WeeklyPrompt,
+  SportDemand, RosterEntry, GameMessage, WeeklyPrompt, SportRequest,
 } from "./types";
 import { bandFor, clampRadius, splitSides, MAX_RADIUS_MILES } from "./domain";
 
@@ -60,6 +60,7 @@ export class MockRepo implements Repo {
   private wanted = new Set<SportId>();
   /** games I have said I cannot make this week */
   private absent = new Set<string>();
+  private requests_: SportRequest[] = [];
 
   constructor(opts: { signedIn?: boolean } = {}) {
     this.seed();
@@ -390,11 +391,39 @@ export class MockRepo implements Repo {
 
   async wantSport(sportId: SportId): Promise<boolean> { return this.want(sportId); }
 
+  /**
+   * The admin inbox. Every "I want this" tap is not a silent counter — it puts
+   * a human request in front of a human, who can answer. In the early days the
+   * founder IS the growth engine, and this is the tool.
+   */
+  async sportRequests(): Promise<SportRequest[]> {
+    return [...this.requests_].sort(
+      (a, b) => Number(a.answered) - Number(b.answered)   // unanswered first
+        || Date.parse(b.createdAt) - Date.parse(a.createdAt),
+    );
+  }
+
+  async replyToRequest(id: string, _body: string): Promise<void> {
+    const r = this.requests_.find((x) => x.id === id);
+    if (r) r.answered = true;
+  }
+
   private want(sportId: SportId): boolean {
     if (this.wanted.has(sportId)) return false;
     this.wanted.add(sportId);
     const myArea = this.me_?.areaId ?? "LE18";
+    // The tap files a REQUEST, not just a counter. A real person sees it.
     const row = this.demand_.find((d) => d.sportId === sportId && d.areaId === myArea);
+    this.requests_.unshift({
+      id: `r${this.requests_.length + 1}`,
+      personName: this.me_?.displayName ?? "You",
+      initials: this.me_?.initials ?? "Y",
+      sportId, areaId: myArea,
+      createdAt: new Date().toISOString(),
+      answered: false,
+      demandHere: (row?.wantCount ?? 0) + 1,
+      threshold: row?.threshold ?? 20,
+    });
     if (!row) return false;
     row.wantCount += 1;
     if (this.me_ && !this.me_.sports.some((s) => s.sportId === sportId)) {
@@ -580,6 +609,20 @@ export class MockRepo implements Repo {
       ).length,
     });
 
+    const R = (id: string, name: string, ini: string, sportId: SportId, areaId: string,
+               agoH: number, answered = false): SportRequest => ({
+      id, personName: name, initials: ini, sportId, areaId,
+      createdAt: new Date(Date.now() - agoH * 36e5).toISOString(),
+      answered, demandHere: 0, threshold: 20,
+    });
+    this.requests_ = [
+      R("r1", "Meera", "ME", "padel", "LE18", 2),
+      R("r2", "Priya", "PR", "padel", "LE18", 5),
+      R("r3", "Tom", "TM", "football", "LE18", 26),
+      R("r4", "Chris", "CW", "football", "LE2", 48),
+      R("r5", "Sam", "SM", "pickleball", "LE18", 96, true),
+    ];
+
     this.demand_ = [
       D("football", "LE18", 19), D("football", "LE2", 16), D("football", "LE3", 11),
       D("padel", "LE18", 12), D("padel", "LE2", 9), D("padel", "LE3", 4),
@@ -587,6 +630,14 @@ export class MockRepo implements Repo {
       D("pickleball", "LE18", 4), D("squash", "LE18", 6),
       D("running", "LE18", 11, 15), D("running", "LE2", 18, 15),
     ];
+
+    // Each request carries the demand in THEIR postcode — the only number that
+    // means anything. "34 people in Leicester" is a vanity metric.
+    for (const r of this.requests_) {
+      const row = this.demand_.find((d) => d.sportId === r.sportId && d.areaId === r.areaId);
+      r.demandHere = row?.wantCount ?? 0;
+      r.threshold = row?.threshold ?? 20;
+    }
   }
 }
 

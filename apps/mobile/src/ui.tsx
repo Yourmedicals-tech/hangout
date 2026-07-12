@@ -51,9 +51,9 @@ export function Nav({ title, sub, onBack, action }: {
 
 type BtnKind = "accent" | "ghost" | "dark" | "green" | "amber" | "flat";
 
-export function Button({ label, onPress, kind = "accent", small, disabled, style }: {
+export function Button({ label, onPress, kind = "accent", small, disabled, style, testID }: {
   label: string; onPress?: () => void; kind?: BtnKind;
-  small?: boolean; disabled?: boolean; style?: ViewStyle;
+  small?: boolean; disabled?: boolean; style?: ViewStyle; testID?: string;
 }) {
   const t = useTheme();
   const bg: Record<BtnKind, string> = {
@@ -66,6 +66,7 @@ export function Button({ label, onPress, kind = "accent", small, disabled, style
   };
   return (
     <Pressable
+      testID={testID}
       onPress={disabled ? undefined : onPress}
       style={({ pressed }) => [
         {

@@ -15,6 +15,7 @@ import { SafeAreaView, View, Alert, ActivityIndicator, useColorScheme } from "re
 import {
   MockRepo, type Repo, type Profile, type Sport, type SportId,
   type PublicGame, type Game, type Person, type SportDemand, type Venue,
+  type WeeklyPrompt,
 } from "@hangout/shared";
 import {
   Welcome, PickSports, Home, GameDetail, Sports, People, PostGame, You, Tabs,
@@ -46,6 +47,7 @@ export default function App() {
   const [games, setGames] = useState<PublicGame[]>([]);
   const [game, setGame] = useState<Game | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
+  const [prompts, setPrompts] = useState<WeeklyPrompt[]>([]);
   const [demand, setDemand] = useState<SportDemand[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [postSport, setPostSport] = useState<SportId>("badminton");
@@ -70,6 +72,7 @@ export default function App() {
     if (p) {
       setGames(await repo.gamesNearMe());
       setPeople(await repo.peopleNearMe());
+      setPrompts(await repo.weeklyPrompts());
     }
     setBusy(false);
   }, []);
@@ -79,6 +82,7 @@ export default function App() {
   const reloadGame = useCallback(async (id: string) => {
     setGame(await repo.game(id));
     setGames(await repo.gamesNearMe());
+    setPrompts(await repo.weeklyPrompts());
   }, []);
 
   const openGame = useCallback(async (id: string) => {
@@ -203,6 +207,12 @@ export default function App() {
     screen = (
       <Home
         games={games}
+        prompts={prompts}
+        onOut={async (id) => {
+          await repo.cantMakeIt(id);
+          await reloadGame(id);
+          Alert.alert("Told them", "You are still a regular — just out this week.");
+        }}
         radiusMiles={me.radiusMiles}
         area={me.areaId}
         onOpen={(id) => void openGame(id)}

@@ -220,6 +220,30 @@ export class SupabaseRepo implements Repo {
     }));
   }
 
+  /**
+   * The standing fixture. `my_weekly_prompts` only returns rows where the
+   * question is genuinely open — you're a regular and have said neither yes nor
+   * no. Silence is not a yes, and the view refuses to pretend otherwise.
+   */
+  async weeklyPrompts(): Promise<import("./types").WeeklyPrompt[]> {
+    const rows = unwrap(await this.sb.from("my_weekly_prompts").select("*"));
+    return rows.map((r: any) => ({
+      gameId: r.game_id, sportId: r.sport_id, title: r.title, startsAt: r.starts_at,
+      playerCount: r.player_count, spotsNeeded: r.spots_needed, spotsLeft: r.spots_left,
+      areaName: r.area_name, distanceMiles: Number(r.distance_miles ?? 0),
+      answered: r.answered, regulars: r.regulars,
+    }));
+  }
+
+  /** Out this week. Locks the game, because saying no opens a spot. */
+  async cantMakeIt(gameId: string): Promise<void> {
+    unwrap(await this.sb.rpc("cant_make_it", { p_game_id: gameId }));
+  }
+
+  async becomeRegular(gameId: string): Promise<void> {
+    unwrap(await this.sb.rpc("become_regular", { p_game_id: gameId }));
+  }
+
   async demand(): Promise<SportDemand[]> {
     const rows = unwrap(await this.sb.from("admin_demand").select("*"));
     return rows.map((r: any) => ({

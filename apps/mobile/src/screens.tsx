@@ -10,7 +10,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, Pressable, TextInput, Alert, ActivityIndicator } from "react-native";
 import {
   isMember, type Game, type PublicGame, type Sport, type SportId,
-  type Person, type SportDemand, type Repo, type Venue,
+  type Person, type SportDemand, type Repo, type Venue, type WeeklyPrompt,
   myShare, formatMoney, reliability, sortForFeed, whereText,
   hiddenUntilYoureIn, primaryAction, splitSides, isValidPlayerCount,
   hostIsOutOfPocket,
@@ -142,27 +142,41 @@ export function PickSports({ sports, demand, onDone }: {
 
 /* ══════════════════════════════════════════════════════ Home */
 
-export function Home({ games, onOpen, onJoin, onPost, radiusMiles, area }: {
-  games: PublicGame[]; onOpen: (id: string) => void; onJoin: (id: string) => void;
+export function Home({ games, prompts, onOpen, onJoin, onOut, onPost, radiusMiles, area }: {
+  games: PublicGame[]; prompts: WeeklyPrompt[];
+  onOpen: (id: string) => void; onJoin: (id: string) => void; onOut: (id: string) => void;
   onPost: () => void; radiusMiles: number; area: string;
 }) {
   const sorted = sortForFeed(games);
-  const needs = sorted.filter((g) => g.spotsLeft > 0 && !g.iAmIn);
+  const asked = new Set(prompts.map((p) => p.gameId));
+  const needs = sorted.filter((g) => g.spotsLeft > 0 && !g.iAmIn && !asked.has(g.id));
   const mine = sorted.filter((g) => g.iAmIn);
-  const full = sorted.filter((g) => g.spotsLeft === 0 && !g.iAmIn);
+  const full = sorted.filter((g) => g.spotsLeft === 0 && !g.iAmIn && !asked.has(g.id));
 
   return (
     <Screen>
       <Nav title="Near you" sub={`Within ${radiusMiles} miles of ${area}`}
            action={{ label: "+ Post", onPress: onPost }} />
       <Body>
-        {games.length === 0 && (
+        {games.length === 0 && prompts.length === 0 && (
           <Block>
             <Text style={{ fontSize: 18, fontWeight: "800" }}>No games yet</Text>
             <P>You're early. Post the first one — everyone nearby who plays what you play will hear about it.</P>
             <Button label="Post the first game" onPress={onPost} />
           </Block>
         )}
+
+        {/*
+          THE STANDING FIXTURE, at the top, above everything.
+          Most real amateur sport is a fixture, not an event — "the Friday
+          badminton" — and the only question anyone ever asks is "are you in
+          this week?". That is the question WhatsApp is genuinely bad at: it
+          scrolls away, half the group never answers, and the host counts heads
+          by reading back through forty messages of banter.
+        */}
+        {prompts.length > 0 && <Label>This week</Label>}
+        {prompts.map((p) => <WeeklyCard key={p.gameId} p={p} onIn={onJoin} onOut={onOut} onOpen={onOpen} />)}
+
         {needs.length > 0 && <Label>Needs a player</Label>}
         {needs.map((g) => <GameCard key={g.id} g={g} onOpen={onOpen} onJoin={onJoin} />)}
         {mine.length > 0 && <Label>You're playing</Label>}
@@ -171,6 +185,56 @@ export function Home({ games, onOpen, onJoin, onPost, radiusMiles, area }: {
         {full.map((g) => <GameCard key={g.id} g={g} onOpen={onOpen} onJoin={onJoin} />)}
       </Body>
     </Screen>
+  );
+}
+
+/**
+ * "Are you in this week?"
+ *
+ * Two buttons, both of them an answer. There is no way to dismiss this without
+ * answering it, and that is the entire design: SILENCE IS NOT A YES. An
+ * unanswered regular is a question, never an attendance — treat it as a yes and
+ * the host turns up to a booked court expecting six and finds two.
+ */
+function WeeklyCard({ p, onIn, onOut, onOpen }: {
+  p: WeeklyPrompt; onIn: (id: string) => void; onOut: (id: string) => void;
+  onOpen: (id: string) => void;
+}) {
+  const t = useTheme();
+  return (
+    <Card tone="ask">
+      <View style={styles.row}>
+        <Text style={{
+          fontSize: 10, fontWeight: "800", letterSpacing: 0.7,
+          textTransform: "uppercase", color: t.amber, flex: 1,
+        }}>
+          Your regular · are you in?
+        </Text>
+        <Text style={{ fontSize: 11.5, fontWeight: "700", color: t.ink3 }}>{when(p.startsAt)}</Text>
+      </View>
+
+      <Pressable onPress={() => onOpen(p.gameId)}>
+        <Text style={{ fontSize: 16.5, fontWeight: "800", color: t.ink, letterSpacing: -0.3 }}>
+          {p.title}
+        </Text>
+        <Text style={{ fontSize: 12.5, color: t.ink2, marginTop: 3 }}>
+          {p.distanceMiles} miles away · {p.areaName}
+          {"  ·  "}{p.playerCount} in so far
+          {p.spotsLeft > 0 ? `, ${p.spotsLeft} spot${p.spotsLeft === 1 ? "" : "s"} left` : ", full"}
+        </Text>
+      </Pressable>
+
+      <Text style={{ fontSize: 11.5, color: t.ink3 }}>
+        {p.answered} of {p.regulars} regulars have answered
+      </Text>
+
+      <View style={[styles.row, { gap: 7 }]}>
+        <Button testID="weekly-in" small label="I'm in"
+                onPress={() => onIn(p.gameId)} style={{ flex: 1 }} />
+        <Button testID="weekly-out" small kind="ghost" label="Can't make it"
+                onPress={() => onOut(p.gameId)} style={{ flex: 1 }} />
+      </View>
+    </Card>
   );
 }
 

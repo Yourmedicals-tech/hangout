@@ -194,6 +194,28 @@ export interface SportDemand {
   venuesHere: number;
 }
 
+/**
+ * A recurring game you are a regular of and have NOT yet answered for this week.
+ *
+ * SILENCE IS NOT A YES. An unanswered regular is a question, never an
+ * attendance. Treating silence as attendance is how a host turns up to a booked
+ * court expecting six people and finds two.
+ */
+export interface WeeklyPrompt {
+  gameId: string;
+  sportId: SportId;
+  title: string;
+  startsAt: string;
+  playerCount: number;
+  spotsNeeded: number;
+  spotsLeft: number;
+  areaName: string;
+  distanceMiles: number;
+  /** how many of the crew have answered, either way */
+  answered: number;
+  regulars: number;
+}
+
 export type JoinOutcome =
   | "joined" | "asked" | "waitlisted" | "already_in"
   | "already_asked" | "cancelled" | "not_live";
@@ -218,6 +240,12 @@ export interface Repo {
   sendMessage(gameId: string, body: string): Promise<void>;
 
   peopleNearMe(): Promise<Person[]>;
+
+  /** "Your regulars — are you in this week?" */
+  weeklyPrompts(): Promise<WeeklyPrompt[]>;
+  /** Out this week. Does NOT remove you from the crew. */
+  cantMakeIt(gameId: string): Promise<void>;
+  becomeRegular(gameId: string): Promise<void>;
 
   demand(): Promise<SportDemand[]>;
   /** true if YOU were the one who tipped the sport over its threshold. */

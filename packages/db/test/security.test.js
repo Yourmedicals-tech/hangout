@@ -11,6 +11,12 @@
  * Run:  node packages/db/test/security.test.js
  */
 const { Client } = require("pg");
+const { execFileSync } = require("node:child_process");
+const path = require("node:path");
+
+// Reseed first. Every DB suite mutates state, and a suite that only passes when
+// it runs first is a suite that will one day pass for the wrong reason.
+execFileSync(path.join(__dirname, "..", "reset.sh"), { stdio: "ignore" });
 const assert = require("node:assert/strict");
 
 const CONN = {
@@ -68,6 +74,13 @@ async function refuses(c, sql, params, pattern, msg) {
     if (pattern.test(e.message)) ok(`${msg} — refused: "${e.message.split("\n")[0]}"`);
     else bad(msg, `refused, but for the wrong reason: ${e.message}`);
   }
+}
+
+/** Plain superuser query, for setting up a scenario. Never for assertions. */
+async function q_admin(sql, params) {
+  const c = new Client(CONN);
+  await c.connect();
+  try { return await c.query(sql, params); } finally { await c.end(); }
 }
 
 /** Run fn as a given user, with RLS genuinely in force. */
@@ -174,7 +187,34 @@ async function asUser(userId, fn) {
   });
 
   // ══════════════════════════════════════════════════════════════════
-  section("PRIVACY — there is no true location to steal");
+  section("A REGULAR is part of the crew, even in a week they are out");
+  // ══════════════════════════════════════════════════════════════════
+  // Saying "can not make it this Friday" takes you off the roster. If RLS then
+  // treated you as a stranger, your own standing fixture would vanish from your
+  // app -- you could not even see the prompt asking whether you were in.
+  //
+  // The ladder protects against STRANGERS. A regular of a game is nobody s
+  // stranger: they have been to that venue, with those people. Being
+  // unavailable this week does not make them one.
+  await q_admin("DELETE FROM game_players WHERE game_id=$1 AND profile_id=$2", [FRIDAY, PRIYA]);
+  await asUser(PRIYA, async (c) => {
+    const detail = await c.query("SELECT venue_name FROM game_detail WHERE id=$1", [FRIDAY]);
+    check(detail.rowCount === 1 && detail.rows[0].venue_name === "Active Wigston",
+      "a REGULAR still sees their own game s venue, even when off this week s roster");
+  });
+  await asUser(ARJUN, async (c) => {
+    const detail = await c.query("SELECT * FROM game_detail WHERE id=$1", [FRIDAY]);
+    check(detail.rowCount === 0,
+      "...but Arjun, who is NOT a regular, is STILL locked out",
+      "loosening RLS for regulars must not loosen it for strangers");
+    const roster = await c.query("SELECT * FROM game_players WHERE game_id=$1", [FRIDAY]);
+    check(roster.rowCount === 0, "...and still cannot read the roster");
+  });
+  await q_admin("INSERT INTO game_players (game_id, profile_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+    [FRIDAY, PRIYA]);
+
+  // ══════════════════════════════════════════════════════════════════
+  section("PRIVACY -- there is no true location to steal");
   // ══════════════════════════════════════════════════════════════════
   await asUser(SHIV, async (c) => {
     const cols = await c.query(

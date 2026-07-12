@@ -22,7 +22,7 @@
 import type {
   Repo, Profile, Sport, SportId, Area, Venue, Person,
   PublicGame, MemberGame, Game, JoinOutcome, PostGameInput,
-  SportDemand, RosterEntry, GameMessage,
+  SportDemand, RosterEntry, GameMessage, WeeklyPrompt,
 } from "./types";
 import { bandFor, clampRadius, splitSides, MAX_RADIUS_MILES } from "./domain";
 
@@ -58,6 +58,8 @@ export class MockRepo implements Repo {
   private demand_: SportDemand[] = [];
   private unlocked = new Set<SportId>();
   private wanted = new Set<SportId>();
+  /** games I have said I cannot make this week */
+  private absent = new Set<string>();
 
   constructor(opts: { signedIn?: boolean } = {}) {
     this.seed();
@@ -158,6 +160,20 @@ export class MockRepo implements Repo {
     // Picking a sport that isn't open counts you toward its threshold — and if
     // you tip it over, it opens then and there.
     for (const s of input.sports) if (!this.isLive(s)) this.want(s);
+
+    // PROTOTYPE SEEDING, and it is a lie — a genuinely new user has no standing
+    // fixtures and would see no weekly prompt, which is correct. But there is no
+    // "next week" in a demo, so we hand the new account one existing crew
+    // membership. Otherwise the single best feature in the app is invisible
+    // until a week has passed, which is not a demo, it's a wait.
+    //
+    // In SupabaseRepo this does not exist: you become a regular by joining a
+    // recurring game and saying "ask me every week".
+    const recurring = this.games.find(
+      (g) => g.repeatsWeekly && input.sports.includes(g.sportId) && !g.players.includes(ME),
+    );
+    if (recurring && !recurring.regulars.includes(ME)) recurring.regulars.push(ME);
+
     return this.me_;
   }
 
@@ -168,6 +184,10 @@ export class MockRepo implements Repo {
       gamesAttended: 6, gamesMissed: 0,
       sports: [{ sportId: "badminton", level: "Improver" }, { sportId: "cricket", level: null }],
     };
+    // Shiv is a regular of the Friday badminton but has not answered for this
+    // week -- so the "are you in?" prompt has something real to ask him.
+    const friday = this.games.find((g) => g.id === "g1");
+    if (friday && !friday.regulars.includes(ME)) friday.regulars.push(ME);
   }
 
   async sports() { return this.sports_; }
@@ -224,6 +244,7 @@ export class MockRepo implements Repo {
     }
     g.players.push(ME);
     g.waitlist = g.waitlist.filter((x) => x !== ME);
+    this.absent.delete(id);              // saying yes overrides an earlier no
     this.sys(g, `${this.me_.displayName} is in`);
     return "joined";
   }
@@ -250,6 +271,70 @@ export class MockRepo implements Repo {
       g.players.push(profileId);
       this.sys(g, `${this.person(profileId).name} was let in`);
     }
+  }
+
+  /**
+   * The standing fixture.
+   *
+   * A prompt appears only while the question is genuinely open: you are a
+   * regular, the game hasn't happened, and you have said NEITHER yes nor no.
+   * It disappears the instant you answer — either way. A prompt that lingers
+   * after you've answered is a prompt people learn to ignore, and then the
+   * whole mechanism is dead.
+   */
+  async weeklyPrompts(): Promise<WeeklyPrompt[]> {
+    return this.games
+      .filter((g) => g.repeatsWeekly && !g.cancelled)
+      .filter((g) => g.regulars.includes(ME))
+      .filter((g) => !g.players.includes(ME))       // hasn't said yes
+      .filter((g) => !this.absent.has(g.id))        // ...nor no
+      .map((g) => {
+        const venue = this.venues.find((v) => v.id === g.venueId)!;
+        const answered = g.regulars.filter(
+          (r) => g.players.includes(r) || (r === ME && this.absent.has(g.id)),
+        ).length;
+        return {
+          gameId: g.id, sportId: g.sportId, title: g.title, startsAt: g.startsAt,
+          playerCount: g.players.length, spotsNeeded: g.spotsNeeded,
+          spotsLeft: Math.max(g.spotsNeeded - g.players.length, 0),
+          areaName: this.areas_.find((a) => a.id === venue.areaId)?.name ?? venue.areaId,
+          distanceMiles: venue.distanceMiles ?? 0,
+          answered, regulars: g.regulars.length,
+        };
+      });
+  }
+
+  /**
+   * "Can't make it this week."
+   *
+   * Note what this does NOT do: it does not remove you as a regular. You are
+   * still in the crew — you are just out this Friday. Conflating "I can't make
+   * Friday" with "take me off the list forever" is how apps quietly shed their
+   * most loyal users.
+   */
+  async cantMakeIt(gameId: string): Promise<void> {
+    const g = this.games.find((x) => x.id === gameId);
+    if (!g) return;
+    this.absent.add(gameId);
+    const wasIn = g.players.includes(ME);
+    g.players = g.players.filter((p) => p !== ME);
+    if (!wasIn) return;                             // never said yes; no spot opened
+    this.sys(g, `${this.me_?.displayName} can't make it this week`);
+    // The waitlist gets first refusal, exactly as in leave_game.
+    const next = g.waitlist.shift();
+    if (next) {
+      g.players.push(next);
+      this.sys(g, `${this.person(next).name} came off the waitlist`);
+    }
+  }
+
+  async becomeRegular(gameId: string): Promise<void> {
+    const g = this.games.find((x) => x.id === gameId);
+    if (!g) throw new Error("no such game");
+    if (!g.players.includes(ME)) {
+      throw new Error("you must be in a game before you can be a regular of it");
+    }
+    if (!g.regulars.includes(ME)) g.regulars.push(ME);
   }
 
   async postGame(i: PostGameInput): Promise<string> {

@@ -14,6 +14,12 @@
  * Run:  node packages/db/test/race.test.js
  */
 const { Client } = require("pg");
+const { execFileSync } = require("node:child_process");
+const path = require("node:path");
+
+// Reseed first. Every DB suite mutates state, and a suite that only passes when
+// it runs first is a suite that will one day pass for the wrong reason.
+execFileSync(path.join(__dirname, "..", "reset.sh"), { stdio: "ignore" });
 
 const CONN = {
   host: "localhost", port: 54322, database: "hangout",

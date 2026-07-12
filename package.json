@@ -10,7 +10,7 @@
   "scripts": {
     "db:up": "docker start hangout-db 2>/dev/null || docker run -d --name hangout-db -e POSTGRES_PASSWORD=hangout_dev -e POSTGRES_DB=hangout -p 54322:5432 postgis/postgis:16-3.4",
     "db:reset": "./packages/db/reset.sh",
-    "db:test": "npm run db:reset >/dev/null && node packages/db/test/security.test.js && node packages/db/test/race.test.js && node packages/db/test/notify.test.js",
+    "db:test": "node packages/db/test/security.test.js && node packages/db/test/race.test.js && node packages/db/test/notify.test.js && node packages/db/test/weekly.test.js",
     "typecheck": "npm -w @hangout/shared run typecheck && npm -w @hangout/mobile run typecheck",
     "test": "npm run db:test && npm -w @hangout/shared test && npm run typecheck",
     "app": "npm -w @hangout/mobile start",

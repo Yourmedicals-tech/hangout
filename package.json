@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "pg": "^8.13.1",
-    "puppeteer-core": "^25.3.0"
+    "puppeteer-core": "^25.3.0",
+    "supabase": "^2.109.1"
   }
 }

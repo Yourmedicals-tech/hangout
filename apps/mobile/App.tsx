@@ -11,7 +11,7 @@
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaView, View, Alert, ActivityIndicator, useColorScheme } from "react-native";
+import { SafeAreaView, View, Alert, ActivityIndicator, useColorScheme, Linking } from "react-native";
 import {
   MockRepo, type Repo, type Profile, type Sport, type SportId,
   type PublicGame, type Game, type Person, type SportDemand, type Venue,
@@ -21,6 +21,7 @@ import {
   Welcome, PickSports, Home, GameDetail, Sports, People, PostGame, You, Admin, Tabs,
 } from "./src/screens";
 import { useTheme } from "./src/theme";
+import { confirmDestructive } from "./src/ui";
 
 // ─────────────────────────────────────────────────────────────────────────
 // SWAP THIS LINE when the backend is live:
@@ -208,7 +209,26 @@ export default function App() {
       />
     );
   } else if (route.name === "people") {
-    screen = <People people={people} />;
+    screen = (
+      <People
+        people={people}
+        onBlock={(id, name) => confirmDestructive(
+          `Block ${name}?`,
+          "You will not see each other anywhere in the app, and neither of you can join the other's games.",
+          "Block",
+          async () => { await repo.blockUser(id); await refresh(); },
+        )}
+        onReport={(id, name) => confirmDestructive(
+          `Report ${name}?`,
+          "We read every report within 24 hours. Reporting also blocks them straight away — you should not have to keep seeing someone while we look.",
+          "Report",
+          async () => {
+            await repo.reportUser(id, "reported from People");
+            await refresh();
+          },
+        )}
+      />
+    );
   } else if (route.name === "you") {
     screen = (
       <You
@@ -219,6 +239,18 @@ export default function App() {
         missed={me.gamesMissed}
         onRadius={async (m) => { await repo.setRadius(m); await refresh(); }}
         onAdmin={() => go({ name: "admin" })}
+        onPrivacy={() => Linking.openURL("https://yourmedicals-tech.github.io/hangout/privacy.html")}
+        onDelete={() => confirmDestructive(
+          "Delete your account?",
+          "This removes your profile, your games and your messages immediately. It cannot be undone.",
+          "Delete",
+          async () => {
+            await repo.deleteMyAccount();
+            await refresh();
+            setStack([]);
+            setRoute({ name: "welcome" });
+          },
+        )}
       />
     );
   } else {

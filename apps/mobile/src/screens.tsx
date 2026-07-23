@@ -487,8 +487,8 @@ export function GameDetail({ game, sport, onBack, onJoin, onLeave, onAccept, onS
         )}
         <View style={{ flex: 1 }}>
           {action === "open" && <Button kind="green" label="You're in ✓" disabled />}
-          {action === "in" && <Button label="I'm in" onPress={onJoin} />}
-          {action === "ask" && <Button kind="dark" label="Ask to join" onPress={onJoin} />}
+          {action === "in" && <Button testID="game-join" label="I'm in" onPress={onJoin} />}
+          {action === "ask" && <Button testID="game-ask" kind="dark" label="Ask to join" onPress={onJoin} />}
           {action === "waitlist" && <Button kind="dark" label="Join the waitlist" onPress={onJoin} />}
           {action === "waiting" && <Button kind="amber" label="Waiting on the host" disabled />}
         </View>
@@ -565,7 +565,11 @@ export function Sports({ sports, demand, onWant, onBack }: {
 
 /* ══════════════════════════════════════════════════════ People */
 
-export function People({ people }: { people: Person[] }) {
+export function People({ people, onReport, onBlock }: {
+  people: Person[];
+  onReport: (id: string, name: string) => void;
+  onBlock: (id: string, name: string) => void;
+}) {
   const t = useTheme();
   return (
     <Screen>
@@ -589,6 +593,15 @@ export function People({ people }: { people: Person[] }) {
                     <Tag tone={r.concerning ? "warn" : "good"}>{r.text}</Tag>
                   </View>
                 } />
+              {/* App Store 1.2: every profile needs a block, every item a report. */}
+              <View style={[styles.row, { gap: 7 }]}>
+                <Button small kind="ghost" label="Block"
+                        testID={`block-${p.id}`}
+                        onPress={() => onBlock(p.id, p.displayName)} style={{ flex: 1 }} />
+                <Button small kind="ghost" label="Report"
+                        testID={`report-${p.id}`}
+                        onPress={() => onReport(p.id, p.displayName)} style={{ flex: 1 }} />
+              </View>
             </Block>
           );
         })}
@@ -875,9 +888,10 @@ export function Admin({ requests, demand, sports, onBack, onReply }: {
 /* ══════════════════════════════════════════════════════ You */
 
 
-export function You({ name, area, radius, attended, missed, onRadius, onAdmin }: {
+export function You({ name, area, radius, attended, missed, onRadius, onAdmin, onDelete, onPrivacy }: {
   name: string; area: string; radius: number; attended: number; missed: number;
   onRadius: (m: number) => void; onAdmin: () => void;
+  onDelete: () => void; onPrivacy: () => void;
 }) {
   const t = useTheme();
   const r = reliability({ gamesAttended: attended, gamesMissed: missed });
@@ -908,6 +922,16 @@ export function You({ name, area, radius, attended, missed, onRadius, onAdmin }:
           <Note>
             Every "I want this" tap lands in front of a human. And demand is broken down by
             postcode, because that is the only level at which a sport can actually open.
+          </Note>
+        </Block>
+
+        <Block title="Your account">
+          <Button label="Privacy policy" kind="ghost" onPress={onPrivacy} />
+          {/* Guideline 5.1.1(v): deletion must be IN the app, not an email to support. */}
+          <Button label="Delete my account" kind="ghost" testID="delete-account" onPress={onDelete} />
+          <Note>
+            Deleting removes your profile, your games and your messages immediately. Games you host
+            are removed too — an orphaned game nobody can cancel is worse for the people in it.
           </Note>
         </Block>
 

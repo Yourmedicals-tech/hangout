@@ -274,6 +274,22 @@ export class SupabaseRepo implements Repo {
       .insert({ request_id: id, from_admin: true, body }));
   }
 
+  async blockUser(profileId: string): Promise<void> {
+    unwrap(await this.sb.rpc("block_user", { p_other: profileId }));
+  }
+
+  async reportUser(profileId: string, reason: string, detail?: string): Promise<void> {
+    unwrap(await this.sb.rpc("report_user", {
+      p_reported: profileId, p_reason: reason, p_detail: detail ?? null,
+    }));
+  }
+
+  /** Deletes the profile. The auth.users row is removed by an Edge Function
+   *  using the service-role key — the client cannot and must not do that. */
+  async deleteMyAccount(): Promise<void> {
+    unwrap(await this.sb.rpc("delete_my_account"));
+  }
+
   async wantSport(sportId: SportId): Promise<boolean> {
     return unwrap(await this.sb.rpc("want_sport", { p_sport_id: sportId })) as boolean;
   }

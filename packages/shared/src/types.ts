@@ -263,6 +263,11 @@ export interface Repo {
   becomeRegular(gameId: string): Promise<void>;
 
   demand(): Promise<SportDemand[]>;
+
+  /** Safety. App Store 1.2 requires report + block; 5.1.1(v) requires delete. */
+  blockUser(profileId: string): Promise<void>;
+  reportUser(profileId: string, reason: string, detail?: string): Promise<void>;
+  deleteMyAccount(): Promise<void>;
   /** Admin only. Every "I want this" tap, oldest unanswered first. */
   sportRequests(): Promise<SportRequest[]>;
   replyToRequest(id: string, body: string): Promise<void>;

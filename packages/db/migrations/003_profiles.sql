@@ -100,9 +100,15 @@ begin
   -- jitter: random bearing, 0-500m. Enough that two users in the same district
   -- do not share a point (which would be its own tell), nowhere near enough to
   -- locate a home.
+  --
+  -- ST_Project MUST be called on the geography, not on ::geometry. On a geometry
+  -- in SRID 4326 the distance argument is DEGREES — 500 of them puts the user
+  -- 9,000 km away, every real signup lands in the ocean, and the app looks empty
+  -- to everyone who ever joins. Seed rows set approx_location directly, so no
+  -- test touched this path until sign-up existed.
   v_bearing  := random() * 2 * pi();
   v_distance := random() * 500;
-  v_jittered := ST_Project(v_centroid::geometry, v_distance, v_bearing)::geography;
+  v_jittered := ST_Project(v_centroid, v_distance, v_bearing);   -- metres
 
   update profiles
      set area_id         = p_area_id,

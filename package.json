@@ -10,13 +10,15 @@
   "scripts": {
     "db:up": "docker start hangout-db 2>/dev/null || docker run -d --name hangout-db -e POSTGRES_PASSWORD=hangout_dev -e POSTGRES_DB=hangout -p 54322:5432 postgis/postgis:16-3.4",
     "db:reset": "./packages/db/reset.sh",
-    "db:test": "node packages/db/test/security.test.js && node packages/db/test/race.test.js && node packages/db/test/notify.test.js && node packages/db/test/weekly.test.js",
+    "db:test": "node packages/db/test/security.test.js && node packages/db/test/race.test.js && node packages/db/test/notify.test.js && node packages/db/test/weekly.test.js && node packages/db/test/safety.test.js",
     "typecheck": "npm -w @hangout/shared run typecheck && npm -w @hangout/mobile run typecheck",
     "test": "npm run db:test && npm -w @hangout/shared test && npm run typecheck",
     "app": "npm -w @hangout/mobile start",
-    "worker": "node packages/db/worker.js"
+    "worker": "node packages/db/worker.js",
+    "e2e": "npx expo export --platform web --output-dir /tmp/hangout-web --no-bytecode >/dev/null 2>&1 || (cd apps/mobile && npx expo export --platform web --output-dir /tmp/hangout-web >/dev/null) ; node apps/mobile/e2e.js"
   },
   "devDependencies": {
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "puppeteer-core": "^25.3.0"
   }
 }

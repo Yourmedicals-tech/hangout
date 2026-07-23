@@ -4,6 +4,7 @@
 import React from "react";
 import {
   View, Text, Pressable, StyleSheet, ViewStyle, TextStyle, ScrollView,
+  Alert, Platform,
 } from "react-native";
 import { useTheme, radius, Theme } from "./theme";
 
@@ -270,3 +271,25 @@ export const styles = StyleSheet.create({
 
 export { useTheme };
 export type { Theme };
+
+/**
+ * Confirm a destructive action.
+ *
+ * React Native Web's Alert.alert IGNORES its buttons — the callback never fires,
+ * so "Delete my account" silently did nothing and no browser test could catch it.
+ * Native is fine. But an unverifiable destructive path is one you find out about
+ * in production, so: real Alert on a phone, window.confirm in a browser.
+ */
+export function confirmDestructive(
+  title: string, message: string, confirmLabel: string, onConfirm: () => void,
+) {
+  if (Platform.OS === "web") {
+    // eslint-disable-next-line no-alert
+    if (window.confirm(`${title}\n\n${message}`)) onConfirm();
+    return;
+  }
+  Alert.alert(title, message, [
+    { text: "Cancel", style: "cancel" },
+    { text: confirmLabel, style: "destructive", onPress: onConfirm },
+  ]);
+}

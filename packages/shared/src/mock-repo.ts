@@ -61,6 +61,8 @@ export class MockRepo implements Repo {
   /** games I have said I cannot make this week */
   private absent = new Set<string>();
   private requests_: SportRequest[] = [];
+  /** symmetric in effect — one-way blocking leaves them still watching you */
+  private blocked = new Set<string>();
 
   constructor(opts: { signedIn?: boolean } = {}) {
     this.seed();
@@ -206,6 +208,7 @@ export class MockRepo implements Repo {
     const mySports = new Set(me.sports.map((s) => s.sportId));
     return this.games
       .filter((g) => mySports.has(g.sportId))
+      .filter((g) => !this.blocked.has(g.hostId))     // blocked host = no game
       .filter((g) => this.isLive(g.sportId))
       .filter((g) => !g.cancelled)
       .filter((g) => (this.venues.find((v) => v.id === g.venueId)?.distanceMiles ?? 99) <= radius)
@@ -230,6 +233,7 @@ export class MockRepo implements Repo {
     const g = this.games.find((x) => x.id === id);
     if (!g) throw new Error("no such game");
     if (!this.me_?.isAdult) throw new Error("must be 18 or over");
+    if (this.blocked.has(g.hostId)) throw new Error("unavailable");
     if (g.cancelled) return "cancelled";
     if (!this.isLive(g.sportId)) return "not_live";
     if (g.players.includes(ME)) return "already_in";
@@ -370,6 +374,7 @@ export class MockRepo implements Repo {
     const radius = clampRadius(me.radiusMiles);
     const mySports = new Set(me.sports.map((s) => s.sportId).filter((s) => this.isLive(s)));
     return this.people
+      .filter((p) => !this.blocked.has(p.id))         // blocked = invisible
       .filter((p) => p.sports.some((s) => mySports.has(s.sportId)))
       .filter((p) => p.distanceMiles <= radius)
       .sort((a, b) => a.distanceMiles - b.distanceMiles)
@@ -396,6 +401,31 @@ export class MockRepo implements Repo {
    * a human request in front of a human, who can answer. In the early days the
    * founder IS the growth engine, and this is the tool.
    */
+  /** A block that works on one screen is not a block. */
+  async blockUser(profileId: string): Promise<void> {
+    this.blocked.add(profileId);
+    // and it has to actually separate you: leave anything they host.
+    for (const g of this.games) {
+      if (g.hostId === profileId) g.players = g.players.filter((p) => p !== ME);
+    }
+  }
+
+  async reportUser(profileId: string, _reason: string, _detail?: string): Promise<void> {
+    // Reporting blocks too. Nobody reports a person and then wants to keep
+    // seeing them for the 24 hours it takes us to read it.
+    await this.blockUser(profileId);
+  }
+
+  async deleteMyAccount(): Promise<void> {
+    this.games = this.games.filter((g) => g.hostId !== ME);
+    for (const g of this.games) {
+      g.players = g.players.filter((p) => p !== ME);
+      g.regulars = g.regulars.filter((p) => p !== ME);
+      g.waitlist = g.waitlist.filter((p) => p !== ME);
+    }
+    this.me_ = null;
+  }
+
   async sportRequests(): Promise<SportRequest[]> {
     return [...this.requests_].sort(
       (a, b) => Number(a.answered) - Number(b.answered)   // unanswered first

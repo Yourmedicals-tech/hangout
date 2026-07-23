@@ -68,11 +68,40 @@ export class SupabaseRepo implements Repo {
     };
   }
 
-  async signUp(): Promise<Profile> {
-    // Sign-up runs through Supabase Auth (email or phone OTP), then a trigger
-    // creates the profiles row. Phone verification is worth the friction: it is
-    // one account per human, and it makes ban-evasion expensive.
-    throw new Error("Wire up Supabase Auth first — see BUILD_LOG.md");
+  /**
+   * Called AFTER the OTP is verified — the auth user already exists, this
+   * creates their profile row.
+   *
+   * app.create_profile() refuses without the 18+ confirmation and fuzzes the
+   * location on the way in: it takes a postcode district, never a latitude, so
+   * there is no parameter through which a real position could arrive.
+   */
+  async signUp(input: {
+    name: string; areaId: string; sports: SportId[]; isAdult?: boolean;
+  }): Promise<Profile> {
+    const { data } = await this.sb.auth.getUser();
+    if (!data.user) throw new Error("Verify your email first");
+
+    unwrap(await this.sb.rpc("create_profile", {
+      p_user_id: data.user.id,
+      p_display_name: input.name,
+      p_area_id: input.areaId,
+      p_is_adult: input.isAdult ?? false,
+    }));
+
+    if (input.sports.length) {
+      unwrap(await this.sb.from("profile_sports").insert(
+        input.sports.map((sportId) => ({ profile_id: data.user!.id, sport_id: sportId })),
+      ));
+      // A sport that is not open here counts your vote toward opening it.
+      for (const s of input.sports) {
+        await this.sb.rpc("want_sport", { p_sport_id: s }).catch(() => {});
+      }
+    }
+
+    const me = await this.me();
+    if (!me) throw new Error("Profile was not created");
+    return me;
   }
 
   async sports(): Promise<Sport[]> {

@@ -33,7 +33,9 @@ const when = (iso: string) => {
 
 /* ══════════════════════════════════════════════════════ Welcome */
 
-export function Welcome({ onCreate, onSignIn }: { onCreate: () => void; onSignIn: () => void }) {
+export function Welcome({ onCreate, onSignIn, live }: {
+  onCreate: () => void; onSignIn: () => void; live?: boolean;
+}) {
   const t = useTheme();
   return (
     <Screen>
@@ -47,8 +49,93 @@ export function Welcome({ onCreate, onSignIn }: { onCreate: () => void; onSignIn
         <View style={{ height: 18 }} />
         <Button label="Create an account" onPress={onCreate} style={{ width: 260 }} />
         <Button label="I've already got one" kind="ghost" onPress={onSignIn} style={{ width: 260 }} />
-        <Note>Leicester · 2 sports live, 6 waiting to open</Note>
+        <Note>
+          Leicester · 2 sports live, 6 waiting to open
+          {live ? "" : "\nDemo mode — no backend configured"}
+        </Note>
       </View>
+    </Screen>
+  );
+}
+
+
+/* ══════════════════════════════════════════════════════ Sign in */
+
+/**
+ * Email, then a six-digit code.
+ *
+ * Codes rather than magic links: a link needs a URL scheme and working deep
+ * links before anyone can log in at all, and it breaks the moment someone opens
+ * the email on a laptop while the app is on their phone. Six characters they
+ * read off one screen and type into another needs no app config at all.
+ */
+export function SignIn({ onSend, onVerify, onBack }: {
+  onSend: (email: string) => Promise<void>;
+  onVerify: (email: string, code: string) => Promise<void>;
+  onBack: () => void;
+}) {
+  const t = useTheme();
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const send = async () => {
+    setBusy(true); setErr(null);
+    try { await onSend(email); setSent(true); }
+    catch (e: any) { setErr(e.message ?? String(e)); }
+    finally { setBusy(false); }
+  };
+  const verify = async () => {
+    setBusy(true); setErr(null);
+    try { await onVerify(email, code); }
+    catch (e: any) { setErr(e.message ?? String(e)); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <Screen>
+      <Nav title={sent ? "Check your email" : "Sign in"}
+           sub={sent ? `We sent a code to ${email}` : "We'll email you a code"}
+           onBack={sent ? () => { setSent(false); setCode(""); } : onBack} />
+      <Body>
+        {!sent ? (
+          <>
+            <View style={{ gap: 5 }}>
+              <Label>Email</Label>
+              <TextInput
+                testID="email" value={email} onChangeText={setEmail}
+                placeholder="you@email.com" placeholderTextColor={t.ink3}
+                autoCapitalize="none" autoCorrect={false} keyboardType="email-address"
+                style={{ borderWidth: 1, borderColor: t.line, borderRadius: 12,
+                         padding: 13, fontSize: 16, color: t.ink }} />
+            </View>
+            <Button testID="send-code" label={busy ? "Sending…" : "Email me a code"}
+                    disabled={busy || !email.includes("@")} onPress={send} />
+            <Note>
+              No password to forget. We only ever show your first name and a rough
+              distance — never your address.
+            </Note>
+          </>
+        ) : (
+          <>
+            <View style={{ gap: 5 }}>
+              <Label>Six-digit code</Label>
+              <TextInput
+                testID="code" value={code} onChangeText={setCode}
+                placeholder="123456" placeholderTextColor={t.ink3}
+                keyboardType="number-pad" maxLength={6}
+                style={{ borderWidth: 1, borderColor: t.line, borderRadius: 12,
+                         padding: 13, fontSize: 22, letterSpacing: 6, color: t.ink }} />
+            </View>
+            <Button testID="verify" label={busy ? "Checking…" : "Sign in"}
+                    disabled={busy || code.length < 6} onPress={verify} />
+            <Button kind="flat" label="Send it again" onPress={send} />
+          </>
+        )}
+        {!!err && <Note tone="amber">{err}</Note>}
+      </Body>
     </Screen>
   );
 }
@@ -57,11 +144,14 @@ export function Welcome({ onCreate, onSignIn }: { onCreate: () => void; onSignIn
 
 export function PickSports({ sports, demand, onDone }: {
   sports: Sport[]; demand: SportDemand[];
-  onDone: (name: string, picked: SportId[]) => void;
+  onDone: (name: string, picked: SportId[], isAdult: boolean) => void;
 }) {
   const t = useTheme();
   const [name, setName] = useState("");
   const [picked, setPicked] = useState<SportId[]>([]);
+  // NEVER defaulted to true. This app gets strangers to meet in person; the
+  // person has to say it, and the database refuses the profile without it.
+  const [adult, setAdult] = useState(false);
   const toggle = (id: SportId) =>
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
@@ -131,10 +221,33 @@ export function PickSports({ sports, demand, onDone }: {
         </Note>
         {soon.map((s) => <Tile key={s.id} s={s} />)}
 
+        <Pressable testID="adult" onPress={() => setAdult((a) => !a)} style={{
+          flexDirection: "row", alignItems: "center", gap: 13, padding: 14,
+          borderWidth: 1.5, borderRadius: 16,
+          borderColor: adult ? t.ink : t.line,
+          backgroundColor: adult ? t.card2 : t.card,
+        }}>
+          <Text style={{ fontSize: 25 }}>🔞</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 15.5, fontWeight: "700", color: t.ink }}>I'm 18 or over</Text>
+            <Text style={{ fontSize: 12, color: t.ink2 }}>
+              Hangout is for adults. It gets strangers meeting in person.
+            </Text>
+          </View>
+          <View style={{
+            width: 22, height: 22, borderRadius: 11, borderWidth: 1.5,
+            borderColor: adult ? t.ink : t.line, backgroundColor: adult ? t.ink : "transparent",
+            alignItems: "center", justifyContent: "center",
+          }}>
+            {adult && <Text style={{ color: t.paper, fontSize: 12 }}>✓</Text>}
+          </View>
+        </Pressable>
+
         <Button
+          testID="finish-signup"
           label="Find my people"
-          disabled={!name.trim() || picked.length === 0}
-          onPress={() => onDone(name.trim(), picked)}
+          disabled={!name.trim() || picked.length === 0 || !adult}
+          onPress={() => onDone(name.trim(), picked, adult)}
         />
       </Body>
     </Screen>

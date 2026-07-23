@@ -150,7 +150,7 @@ export class MockRepo implements Repo {
 
   async me() { return this.me_; }
 
-  async signUp(input: { name: string; areaId: string; sports: SportId[] }): Promise<Profile> {
+  async signUp(input: { name: string; areaId: string; sports: SportId[]; isAdult?: boolean }): Promise<Profile> {
     const initials = input.name.trim().split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
     this.me_ = {
       id: ME, displayName: input.name, initials,

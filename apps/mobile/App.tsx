@@ -13,25 +13,22 @@ import React, { useCallback, useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView, View, Alert, ActivityIndicator, useColorScheme, Linking } from "react-native";
 import {
-  MockRepo, type Repo, type Profile, type Sport, type SportId,
+  type Repo, type Profile, type Sport, type SportId,
   type PublicGame, type Game, type Person, type SportDemand, type Venue,
   type WeeklyPrompt, type SportRequest,
 } from "@hangout/shared";
 import {
-  Welcome, PickSports, Home, GameDetail, Sports, People, PostGame, You, Admin, Tabs,
+  Welcome, SignIn, PickSports, Home, GameDetail, Sports, People, PostGame, You, Admin, Tabs,
 } from "./src/screens";
+import { repo, isLive, signInWithEmail, verifyCode, hasSession, signOut } from "./src/supabase";
 import { useTheme } from "./src/theme";
 import { confirmDestructive } from "./src/ui";
 
-// ─────────────────────────────────────────────────────────────────────────
-// SWAP THIS LINE when the backend is live:
-//     const repo: Repo = new SupabaseRepo(url, anonKey);
-// Nothing else in the app changes.
-const repo: Repo = new MockRepo();
-// ─────────────────────────────────────────────────────────────────────────
+// `repo` comes from ./src/supabase: real Postgres when EXPO_PUBLIC_SUPABASE_*
+// are set, MockRepo otherwise. `npm start` still works with zero credentials.
 
 type Route =
-  | { name: "welcome" } | { name: "pick" } | { name: "home" }
+  | { name: "welcome" } | { name: "signin" } | { name: "pick" } | { name: "home" }
   | { name: "game"; id: string } | { name: "post" }
   | { name: "sports" } | { name: "people" } | { name: "you" } | { name: "admin" };
 
@@ -126,19 +123,39 @@ export default function App() {
         <PickSports
           sports={sports}
           demand={demand}
-          onDone={async (name, picked) => {
-            await repo.signUp({ name, areaId: "LE18", sports: picked });
+          onDone={async (name, picked, isAdult) => {
+            await repo.signUp({ name, areaId: "LE18", sports: picked, isAdult });
             await refresh();
             setStack([]);
             setRoute({ name: "home" });
           }}
         />
       )
+      : route.name === "signin"
+      ? (
+        <SignIn
+          onBack={() => setRoute({ name: "welcome" })}
+          onSend={signInWithEmail}
+          onVerify={async (email, code) => {
+            await verifyCode(email, code);
+            await refresh();
+            // Verified but no profile yet -> onboarding. Otherwise straight in.
+            const me = await repo.me().catch(() => null);
+            setRoute(me ? { name: "home" } : { name: "pick" });
+          }}
+        />
+      )
       : (
         <Welcome
-          onCreate={() => setRoute({ name: "pick" })}
+          live={isLive}
+          onCreate={() => setRoute(isLive ? { name: "signin" } : { name: "pick" })}
           onSignIn={async () => {
-            await repo.signUp({ name: "Shiv", areaId: "LE18", sports: ["badminton", "cricket"] });
+            if (isLive) { setRoute({ name: "signin" }); return; }
+            // Mock only: instant demo account, no email round-trip.
+            await repo.signUp({
+              name: "Shiv", areaId: "LE18",
+              sports: ["badminton", "cricket"], isAdult: true,
+            });
             await refresh();
             setRoute({ name: "home" });
           }}
@@ -246,6 +263,7 @@ export default function App() {
           "Delete",
           async () => {
             await repo.deleteMyAccount();
+            await signOut();          // the profile is gone; end the session too
             await refresh();
             setStack([]);
             setRoute({ name: "welcome" });

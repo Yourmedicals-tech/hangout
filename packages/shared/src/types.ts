@@ -238,7 +238,7 @@ export type JoinOutcome =
 /** Everything the UI can do. Implemented by SupabaseRepo and MockRepo alike. */
 export interface Repo {
   me(): Promise<Profile | null>;
-  signUp(input: { name: string; areaId: string; sports: SportId[] }): Promise<Profile>;
+  signUp(input: { name: string; areaId: string; sports: SportId[]; isAdult?: boolean }): Promise<Profile>;
 
   sports(): Promise<Sport[]>;
   areas(): Promise<Area[]>;

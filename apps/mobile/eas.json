@@ -1,0 +1,15 @@
+{
+  "cli": { "version": ">= 18.0.0", "appVersionSource": "remote" },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "ios": { "simulator": false },
+      "env": { "EXPO_PUBLIC_SUPABASE_URL": "https://lyrynfmmobtvpydmisbf.supabase.co" }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": { "EXPO_PUBLIC_SUPABASE_URL": "https://lyrynfmmobtvpydmisbf.supabase.co" }
+    }
+  },
+  "submit": { "production": {} }
+}

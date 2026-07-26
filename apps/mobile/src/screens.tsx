@@ -124,8 +124,8 @@ export function SignIn({ onSend, onVerify, onBack }: {
               <Label>Six-digit code</Label>
               <TextInput
                 testID="code" value={code} onChangeText={setCode}
-                placeholder="123456" placeholderTextColor={t.ink3}
-                keyboardType="number-pad" maxLength={6}
+                placeholder="12345678" placeholderTextColor={t.ink3}
+                keyboardType="number-pad" maxLength={10}
                 style={{ borderWidth: 1, borderColor: t.line, borderRadius: 12,
                          padding: 13, fontSize: 22, letterSpacing: 6, color: t.ink }} />
             </View>
